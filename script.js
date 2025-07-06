@@ -385,12 +385,13 @@ if (contactForm) {
         submitBtn.textContent = 'Отправка...';
         
         try {
-            // Сохраняем в Firestore
-            await db.collection('contacts').add({
+            // Сохраняем в Realtime Database
+            const newContactRef = db.ref('contacts').push();
+            await newContactRef.set({
                 name: name,
                 email: email,
                 message: message,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                timestamp: firebase.database.ServerValue.TIMESTAMP
             });
             
             // Показываем успех

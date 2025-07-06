@@ -13,7 +13,7 @@ const firebaseConfig = {
 // Инициализация Firebase
 firebase.initializeApp(firebaseConfig);
 
-// Получение ссылки на Firestore
-const db = firebase.firestore();
+// Получение ссылки на Realtime Database
+const db = firebase.database();
 
-console.log('Firebase инициализирован! 🔥'); 
+console.log('Firebase Realtime Database инициализирован! 🔥'); 
