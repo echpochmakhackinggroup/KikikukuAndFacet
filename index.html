@@ -72,37 +72,86 @@
         <div class="container">
             <h2 class="section__title">мы не слуги</h2>
             <div class="services__grid">
-                <div class="service__card">
+                <div class="service__card" data-modal="design">
                     <div class="service__icon">🎨</div>
                     <h3>Дизайн</h3>
                     <p>Виточка красиво рисует</p>
                 </div>
-                <div class="service__card">
+                <div class="service__card" data-modal="development">
                     <div class="service__icon">💻</div>
                     <h3>Разработка</h3>
                     <p>Курсовую делал в матлабе да</p>
                 </div>
-                <div class="service__card">
+                <div class="service__card" data-modal="gamedev">
                     <div class="service__icon">📱</div>
                     <h3>Геймдев</h3>
-                    <p>Сделали визуальную новеллу на renpy</p>
+                    <p>Сделали визульную новеллу на renpy</p>
+                </div>
+            </div>
+
+            <!-- Модальные окна -->
+            <div id="modal-design" class="modal">
+                <div class="modal__content">
+                    <span class="modal__close">&times;</span>
+                    <div class="modal__header">
+                        <div class="modal__icon">🎨</div>
+                        <h2>Дизайн</h2>
+                    </div>
+                    <div class="modal__body">
+                        <p>Виточка - наш главный дизайнер, который создает потрясающие визуальные решения. Она специализируется на:</p>
+                        <ul>
+                            <li>UI/UX дизайн интерфейсов</li>
+                            <li>Создание логотипов и брендинга</li>
+                            <li>Иллюстрации и графика</li>
+                            <li>Анимации и микровзаимодействия</li>
+                        </ul>
+                        <p>Каждый проект получается уникальным и запоминающимся</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="modal-development" class="modal">
+                <div class="modal__content">
+                    <span class="modal__close">&times;</span>
+                    <div class="modal__header">
+                        <div class="modal__icon">💻</div>
+                        <h2>Разработка</h2>
+                    </div>
+                    <div class="modal__body">
+                        <p>Наша команда разработчиков создает мощные и функциональные решения:</p>
+                        <ul>
+                            <li>Веб-приложения на современных технологиях</li>
+                            <li>Мобильные приложения для iOS и Android</li>
+                            <li>Серверные решения и API</li>
+                            <li>Интеграции с внешними сервисами</li>
+                        </ul>
+                        <p>И да курсовую в MATLAB мы тоже делаем</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="modal-gamedev" class="modal">
+                <div class="modal__content">
+                    <span class="modal__close">&times;</span>
+                    <div class="modal__header">
+                        <div class="modal__icon">📱</div>
+                        <h2>Геймдев</h2>
+                    </div>
+                    <div class="modal__body">
+                        <p>Мы создаем увлекательные игровые проекты:</p>
+                        <ul>
+                            <li>Визуальную новеллу на Ren'Py</li>
+                            <li>2D и 3D(-1) игры</li>
+                            <li>Интерактивные истории</li>
+                        </ul>
+                        <p>Наша визуальная новелла уже покорила сердца многих игроков!(1 только)</p>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Modal Overlays -->
-    <div class="modal-overlay" id="modalOverlay">
-        <div class="modal-content">
-            <button class="modal-close" id="modalClose">&times;</button>
-            <div class="modal-body">
-                <div class="modal-icon" id="modalIcon"></div>
-                <h2 class="modal-title" id="modalTitle"></h2>
-                <p class="modal-description" id="modalDescription"></p>
-                <div class="modal-details" id="modalDetails"></div>
-            </div>
-        </div>
-    </div>
+
 
     <!-- Footer -->
     <footer class="footer">

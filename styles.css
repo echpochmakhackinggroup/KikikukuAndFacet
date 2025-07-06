@@ -265,103 +265,110 @@ section {
     transform: scale(1.1) rotateY(10deg);
 }
 
-/* Modal Styles */
-.modal-overlay {
+/* Модальные окна */
+.modal {
+    display: none;
     position: fixed;
-    top: 0;
+    z-index: 1000;
     left: 0;
+    top: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(10px);
-    z-index: 1000;
+    background-color: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
     opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
+    transition: opacity 0.3s ease;
 }
 
-.modal-overlay.active {
+.modal.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     opacity: 1;
-    visibility: visible;
 }
 
-.modal-content {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0.8);
+.modal__content {
     background: white;
     border-radius: 20px;
-    padding: 3rem;
-    max-width: 90%;
-    max-height: 90%;
+    padding: 2rem;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
     overflow-y: auto;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    position: relative;
+    transform: scale(0.7) translateY(50px);
+    opacity: 0;
     transition: all 0.3s ease;
 }
 
-.modal-overlay.active .modal-content {
-    transform: translate(-50%, -50%) scale(1);
+.modal.show .modal__content {
+    transform: scale(1) translateY(0);
+    opacity: 1;
 }
 
-.modal-close {
+.modal__close {
     position: absolute;
     top: 1rem;
     right: 1.5rem;
-    background: none;
-    border: none;
     font-size: 2rem;
-    cursor: pointer;
+    font-weight: bold;
     color: #666;
+    cursor: pointer;
     transition: color 0.3s ease;
-    z-index: 1001;
+    z-index: 1;
 }
 
-.modal-close:hover {
+.modal__close:hover {
     color: #333;
 }
 
-.modal-body {
-    text-align: center;
-}
-
-.modal-icon {
-    font-size: 4rem;
+.modal__header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
     margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f0f0f0;
 }
 
-.modal-title {
-    font-size: 2.5rem;
-    margin-bottom: 1rem;
+.modal__icon {
+    font-size: 3rem;
+}
+
+.modal__header h2 {
+    font-size: 2rem;
     color: #1f2937;
+    margin: 0;
 }
 
-.modal-description {
-    font-size: 1.2rem;
-    color: #6b7280;
-    margin-bottom: 2rem;
+.modal__body {
+    color: #4b5563;
     line-height: 1.6;
 }
 
-.modal-details {
-    font-size: 1rem;
-    color: #4b5563;
-    line-height: 1.8;
+.modal__body p {
+    margin-bottom: 1rem;
 }
 
-/* Интерактивные карточки */
+.modal__body ul {
+    margin: 1rem 0;
+    padding-left: 1.5rem;
+}
+
+.modal__body li {
+    margin-bottom: 0.5rem;
+    color: #6b7280;
+}
+
+/* Анимация для карточек при клике */
 .service__card {
     cursor: pointer;
     user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    transition: all 0.3s ease;
 }
 
 .service__card:active {
-    transform: scale(0.95);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    transform: translateY(-5px) rotateX(2deg);
+    transition: transform 0.1s ease;
 }
 
 .service__icon {
@@ -532,6 +539,26 @@ section {
         margin: 0 5px;
     }
     
+    .modal__content {
+        padding: 1.5rem;
+        margin: 1rem;
+        max-height: 90vh;
+    }
+    
+    .modal__header h2 {
+        font-size: 1.5rem;
+    }
+    
+    .modal__icon {
+        font-size: 2.5rem;
+    }
+    
+    .modal__close {
+        top: 0.5rem;
+        right: 1rem;
+        font-size: 1.5rem;
+    }
+    
     .service__icon {
         font-size: 2rem;
         margin-bottom: 0.5rem;
@@ -545,24 +572,6 @@ section {
     .service__card p {
         font-size: 0.9rem;
         line-height: 1.4;
-    }
-    
-    /* Modal responsive */
-    .modal-content {
-        padding: 2rem;
-        max-width: 95%;
-    }
-    
-    .modal-title {
-        font-size: 2rem;
-    }
-    
-    .modal-description {
-        font-size: 1rem;
-    }
-    
-    .modal-icon {
-        font-size: 3rem;
     }
     
     .stat {

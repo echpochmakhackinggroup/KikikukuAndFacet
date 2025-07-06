@@ -288,137 +288,122 @@ document.querySelectorAll('.hero__btn, .contact__form button').forEach(btn => {
     });
 });
 
-// Данные для модальных окон
-const modalData = {
-    'design': {
-        icon: '🎨',
-        title: 'Дизайн',
-        description: 'Виточка красиво рисует',
-        details: `
-            <h3>Наши возможности в дизайне:</h3>
-            <ul>
-                <li>Создание логотипов и брендинга</li>
-                <li>Веб-дизайн и UI/UX</li>
-                <li>Иллюстрации и графика</li>
-                <li>Анимации и интерактивные элементы</li>
-            </ul>
-            <p><strong>Виточка</strong> - наш главный дизайнер, который превращает идеи в красивые визуальные решения.</p>
-        `
-    },
-    'development': {
-        icon: '💻',
-        title: 'Разработка',
-        description: 'Курсовую делал в матлабе да',
-        details: `
-            <h3>Наши технические навыки:</h3>
-            <ul>
-                <li>MATLAB и научные вычисления</li>
-                <li>Веб-разработка (HTML, CSS, JavaScript)</li>
-                <li>Python и автоматизация</li>
-                <li>Анализ данных и визуализация</li>
-            </ul>
-            <p>Да, мы действительно делали курсовую в MATLAB! И не только её...</p>
-        `
-    },
-    'gamedev': {
-        icon: '📱',
-        title: 'Геймдев',
-        description: 'Сделали визуальную новеллу на renpy',
-        details: `
-            <h3>Наши игровые проекты:</h3>
-            <ul>
-                <li>Визуальные новеллы на Ren'Py</li>
-                <li>Интерактивные истории</li>
-                <li>Прототипы игр</li>
-                <li>Игровые механики</li>
-            </ul>
-            <p>Создали полноценную визуальную новеллу с множеством выборов и концовок!</p>
-        `
-    }
-};
+// Модальные окна для карточек услуг
+const modalTriggers = document.querySelectorAll('.service__card[data-modal]');
+const modals = document.querySelectorAll('.modal');
+const modalCloses = document.querySelectorAll('.modal__close');
 
-// Модальные окна
-const modalOverlay = document.getElementById('modalOverlay');
-const modalClose = document.getElementById('modalClose');
-const modalIcon = document.getElementById('modalIcon');
-const modalTitle = document.getElementById('modalTitle');
-const modalDescription = document.getElementById('modalDescription');
-const modalDetails = document.getElementById('modalDetails');
+// Открытие модального окна
+modalTriggers.forEach(trigger => {
+    trigger.addEventListener('click', () => {
+        const modalId = trigger.getAttribute('data-modal');
+        const modal = document.getElementById(`modal-${modalId}`);
+        
+        if (modal) {
+            // Анимация карточки при клике
+            gsap.to(trigger, {
+                duration: 0.2,
+                scale: 0.95,
+                ease: 'power2.out',
+                onComplete: () => {
+                    gsap.to(trigger, {
+                        duration: 0.2,
+                        scale: 1,
+                        ease: 'power2.out'
+                    });
+                }
+            });
+            
+            // Показываем модальное окно
+            modal.style.display = 'flex';
+            
+            // Анимация появления
+            gsap.fromTo(modal, 
+                { opacity: 0 },
+                { 
+                    opacity: 1, 
+                    duration: 0.3,
+                    ease: 'power2.out'
+                }
+            );
+            
+            gsap.fromTo(modal.querySelector('.modal__content'),
+                { 
+                    scale: 0.7, 
+                    y: 50, 
+                    opacity: 0 
+                },
+                { 
+                    scale: 1, 
+                    y: 0, 
+                    opacity: 1, 
+                    duration: 0.4,
+                    ease: 'back.out(1.7)',
+                    delay: 0.1
+                }
+            );
+            
+            // Блокируем скролл
+            document.body.style.overflow = 'hidden';
+        }
+    });
+});
 
-function openModal(data) {
-    console.log('Открытие модального окна:', data);
+// Закрытие модального окна
+function closeModal(modal) {
+    gsap.to(modal, {
+        opacity: 0,
+        duration: 0.3,
+        ease: 'power2.out',
+        onComplete: () => {
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+    });
     
-    if (!modalIcon || !modalTitle || !modalDescription || !modalDetails || !modalOverlay) {
-        console.error('Не найдены элементы модального окна!');
-        return;
-    }
-    
-    modalIcon.textContent = data.icon;
-    modalTitle.textContent = data.title;
-    modalDescription.textContent = data.description;
-    modalDetails.innerHTML = data.details;
-    
-    modalOverlay.classList.add('active');
-    document.body.style.overflow = 'hidden';
-    
-    // GSAP анимация открытия
-    gsap.fromTo(modalOverlay, 
-        { opacity: 0 },
-        { opacity: 1, duration: 0.3, ease: 'power2.out' }
-    );
-    
-    gsap.fromTo('.modal-content',
-        { scale: 0.8, y: 50 },
-        { scale: 1, y: 0, duration: 0.4, ease: 'back.out(1.7)' }
-    );
-    
-    console.log('Модальное окно открыто!');
+    gsap.to(modal.querySelector('.modal__content'), {
+        scale: 0.7,
+        y: 50,
+        opacity: 0,
+        duration: 0.3,
+        ease: 'power2.out'
+    });
 }
 
-function closeModal() {
-    modalOverlay.classList.remove('active');
-    document.body.style.overflow = '';
-    
-    // GSAP анимация закрытия
-    gsap.to(modalOverlay, { opacity: 0, duration: 0.3, ease: 'power2.out' });
-    gsap.to('.modal-content', { scale: 0.8, y: 50, duration: 0.3, ease: 'power2.in' });
-}
+// Обработчики закрытия
+modalCloses.forEach(close => {
+    close.addEventListener('click', () => {
+        const modal = close.closest('.modal');
+        closeModal(modal);
+    });
+});
 
-// Обработчики модальных окон
-modalClose.addEventListener('click', closeModal);
-modalOverlay.addEventListener('click', (e) => {
-    if (e.target === modalOverlay) {
-        closeModal();
-    }
+// Закрытие по клику вне модального окна
+modals.forEach(modal => {
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeModal(modal);
+        }
+    });
 });
 
 // Закрытие по Escape
 document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && modalOverlay.classList.contains('active')) {
-        closeModal();
+    if (e.key === 'Escape') {
+        const openModal = document.querySelector('.modal[style*="display: flex"]');
+        if (openModal) {
+            closeModal(openModal);
+        }
     }
 });
 
-// Интерактивные карточки услуг
-document.querySelectorAll('.service__card').forEach((card, index) => {
-    const cardTypes = ['design', 'development', 'gamedev'];
-    const cardType = cardTypes[index];
-    
-    console.log(`Настройка карточки ${index}: ${cardType}`);
-    
-    // Клик для открытия модального окна
-    card.addEventListener('click', (e) => {
-        console.log(`Клик по карточке ${cardType}`);
-        e.preventDefault();
-        e.stopPropagation();
-        openModal(modalData[cardType]);
-    });
-    
-    // Hover эффекты
+// Hover эффекты для карточек услуг
+document.querySelectorAll('.service__card').forEach(card => {
     card.addEventListener('mouseenter', () => {
         gsap.to(card, {
             duration: 0.3,
-            scale: 1.05,
+            y: -10,
+            scale: 1.02,
             ease: 'power2.out'
         });
     });
@@ -426,20 +411,11 @@ document.querySelectorAll('.service__card').forEach((card, index) => {
     card.addEventListener('mouseleave', () => {
         gsap.to(card, {
             duration: 0.3,
+            y: 0,
             scale: 1,
             ease: 'power2.out'
         });
     });
-});
-
-// Проверяем, что модальные элементы найдены
-console.log('Модальные элементы:', {
-    overlay: document.getElementById('modalOverlay'),
-    close: document.getElementById('modalClose'),
-    icon: document.getElementById('modalIcon'),
-    title: document.getElementById('modalTitle'),
-    description: document.getElementById('modalDescription'),
-    details: document.getElementById('modalDetails')
 });
 
 // Hover эффекты для статистики (только для десктопа)
