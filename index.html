@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Адаптивный сайт с GSAP</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav">
+            <div class="nav__logo">Logo</div>
+            <ul class="nav__menu">
+                <li><a href="#home">Главная</a></li>
+                <li><a href="#about">О нас</a></li>
+                <li><a href="#services">Услуги</a></li>
+                <li><a href="#contact">Контакты</a></li>
+            </ul>
+            <div class="nav__burger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero__content">
+            <h1 class="hero__title">Добро пожаловать</h1>
+            <p class="hero__subtitle">Создаем удивительные цифровые решения</p>
+            <button class="hero__btn">Начать</button>
+        </div>
+        <div class="hero__image">
+            <div class="hero__shape"></div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about">
+        <div class="container">
+            <h2 class="section__title">О нас</h2>
+            <div class="about__content">
+                <div class="about__text">
+                    <p>Мы команда профессионалов, создающая инновационные решения для вашего бизнеса. Наш подход основан на креативности, технологиях и внимании к деталям.</p>
+                    <p>Каждый проект для нас - это возможность создать что-то уникальное и полезное для наших клиентов.</p>
+                </div>
+                <div class="about__stats">
+                    <div class="stat">
+                        <h3>100+</h3>
+                        <p>Проектов</p>
+                    </div>
+                    <div class="stat">
+                        <h3>50+</h3>
+                        <p>Клиентов</p>
+                    </div>
+                    <div class="stat">
+                        <h3>5+</h3>
+                        <p>Лет опыта</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="services">
+        <div class="container">
+            <h2 class="section__title">Наши услуги</h2>
+            <div class="services__grid">
+                <div class="service__card">
+                    <div class="service__icon">🎨</div>
+                    <h3>Веб-дизайн</h3>
+                    <p>Создаем современные и функциональные интерфейсы</p>
+                </div>
+                <div class="service__card">
+                    <div class="service__icon">💻</div>
+                    <h3>Разработка</h3>
+                    <p>Полный цикл разработки веб-приложений</p>
+                </div>
+                <div class="service__card">
+                    <div class="service__icon">📱</div>
+                    <h3>Мобильные приложения</h3>
+                    <p>iOS и Android приложения для вашего бизнеса</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+        <div class="container">
+            <h2 class="section__title">Свяжитесь с нами</h2>
+            <div class="contact__content">
+                <form class="contact__form">
+                    <input type="text" placeholder="Ваше имя" required>
+                    <input type="email" placeholder="Email" required>
+                    <textarea placeholder="Сообщение" rows="5" required></textarea>
+                    <button type="submit">Отправить</button>
+                </form>
+                <div class="contact__info">
+                    <h3>Контакты</h3>
+                    <p>📧 info@example.com</p>
+                    <p>📞 +7 (999) 123-45-67</p>
+                    <p>📍 Москва, ул. Примерная, 123</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 Все права защищены</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html> 
