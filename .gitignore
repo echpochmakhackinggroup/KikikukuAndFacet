@@ -52,10 +52,7 @@ node_modules/
 .env.production
 .env.development
 
-# Firebase
-firebase-debug.log
-firebase-debug.*.log
-.firebase/
+
 
 # Temporary files
 *.tmp

@@ -273,103 +273,7 @@ section {
     line-height: 1.6;
 }
 
-/* Contact Section */
-.contact {
-    background: #f8fafc;
-}
 
-.contact__content {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4rem;
-}
-
-.contact__form {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.contact__form input,
-.contact__form textarea {
-    padding: 1rem;
-    border: 2px solid #e5e7eb;
-    border-radius: 10px;
-    font-size: 1rem;
-    transition: border-color 0.3s ease;
-}
-
-.contact__form input:focus,
-.contact__form textarea:focus {
-    outline: none;
-    border-color: #2563eb;
-}
-
-.contact__form button {
-    background: #2563eb;
-    color: white;
-    border: none;
-    padding: 1rem 2rem;
-    font-size: 1.1rem;
-    font-weight: 600;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.contact__form button:hover {
-    background: #1d4ed8;
-    transform: translateY(-2px);
-}
-
-.contact__form button:disabled {
-    background: #9ca3af;
-    cursor: not-allowed;
-    transform: none;
-}
-
-.form__status {
-    margin-top: 1rem;
-    padding: 0.75rem;
-    border-radius: 8px;
-    font-weight: 500;
-    text-align: center;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.form__status.success {
-    background: #dcfce7;
-    color: #166534;
-    border: 1px solid #bbf7d0;
-    opacity: 1;
-}
-
-.form__status.error {
-    background: #fef2f2;
-    color: #dc2626;
-    border: 1px solid #fecaca;
-    opacity: 1;
-}
-
-.form__status.loading {
-    background: #eff6ff;
-    color: #1d4ed8;
-    border: 1px solid #bfdbfe;
-    opacity: 1;
-}
-
-.contact__info h3 {
-    font-size: 1.5rem;
-    margin-bottom: 1.5rem;
-    color: #1f2937;
-}
-
-.contact__info p {
-    margin-bottom: 1rem;
-    font-size: 1.1rem;
-    color: #4b5563;
-}
 
 /* Footer */
 .footer {
@@ -418,10 +322,7 @@ section {
         grid-template-columns: 1fr;
     }
     
-    .contact__content {
-        grid-template-columns: 1fr;
-        gap: 2rem;
-    }
+
     
     .section__title {
         font-size: 2rem;
@@ -552,24 +453,7 @@ section {
         font-size: 0.9rem;
     }
     
-    .contact__form input,
-    .contact__form textarea {
-        padding: 0.8rem;
-        font-size: 0.9rem;
-    }
-    
-    .contact__form button {
-        padding: 0.8rem 1.5rem;
-        font-size: 1rem;
-    }
-    
-    .contact__info h3 {
-        font-size: 1.3rem;
-    }
-    
-    .contact__info p {
-        font-size: 0.9rem;
-    }
+
     
     .nav__logo {
         font-size: 1.2rem;
