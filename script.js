@@ -1,6 +1,15 @@
 // Инициализация GSAP ScrollTrigger
 gsap.registerPlugin(ScrollTrigger);
 
+// Оптимизация для очень маленьких экранов
+const isSmallScreen = window.innerWidth <= 320;
+const isMobile = window.innerWidth <= 768;
+
+// Отключаем некоторые анимации на очень маленьких экранах для производительности
+if (isSmallScreen) {
+    gsap.set('.hero__shape', { rotation: 0 });
+}
+
 // Анимация загрузки страницы
 window.addEventListener('load', () => {
     // Анимация header
@@ -56,7 +65,7 @@ gsap.from('.about__text', {
         trigger: '.about__text',
         start: 'top 80%',
         end: 'bottom 20%',
-        toggleActions: 'play none none reverse'
+        toggleActions: 'play none none none'
     },
     duration: 1,
     x: -100,
@@ -69,7 +78,7 @@ gsap.from('.about__stats', {
         trigger: '.about__stats',
         start: 'top 80%',
         end: 'bottom 20%',
-        toggleActions: 'play none none reverse'
+        toggleActions: 'play none none none'
     },
     duration: 1,
     x: 100,
@@ -83,7 +92,7 @@ gsap.from('.stat', {
         trigger: '.about__stats',
         start: 'top 80%',
         end: 'bottom 20%',
-        toggleActions: 'play none none reverse'
+        toggleActions: 'play none none none'
     },
     duration: 0.8,
     y: 50,
@@ -98,7 +107,7 @@ gsap.from('.service__card', {
         trigger: '.services__grid',
         start: 'top 80%',
         end: 'bottom 20%',
-        toggleActions: 'play none none reverse'
+        toggleActions: 'play none none none'
     },
     duration: 1,
     y: 100,
@@ -113,7 +122,7 @@ gsap.from('.contact__form', {
         trigger: '.contact__form',
         start: 'top 80%',
         end: 'bottom 20%',
-        toggleActions: 'play none none reverse'
+        toggleActions: 'play none none none'
     },
     duration: 1,
     x: -100,
@@ -126,7 +135,7 @@ gsap.from('.contact__info', {
         trigger: '.contact__info',
         start: 'top 80%',
         end: 'bottom 20%',
-        toggleActions: 'play none none reverse'
+        toggleActions: 'play none none none'
     },
     duration: 1,
     x: 100,
@@ -140,7 +149,7 @@ gsap.from('.section__title', {
         trigger: '.section__title',
         start: 'top 80%',
         end: 'bottom 20%',
-        toggleActions: 'play none none reverse'
+        toggleActions: 'play none none none'
     },
     duration: 1,
     y: 50,
@@ -148,18 +157,20 @@ gsap.from('.section__title', {
     ease: 'power3.out'
 });
 
-// Parallax effect для hero shape
-gsap.to('.hero__shape', {
-    scrollTrigger: {
-        trigger: '.hero',
-        start: 'top top',
-        end: 'bottom top',
-        scrub: true
-    },
-    y: 100,
-    rotation: 180,
-    ease: 'none'
-});
+// Parallax effect для hero shape (только для больших экранов)
+if (!isSmallScreen) {
+    gsap.to('.hero__shape', {
+        scrollTrigger: {
+            trigger: '.hero',
+            start: 'top top',
+            end: 'bottom top',
+            scrub: true
+        },
+        y: 100,
+        rotation: 180,
+        ease: 'none'
+    });
+}
 
 // Анимация header при скролле
 let lastScrollY = window.scrollY;
@@ -207,47 +218,51 @@ document.querySelectorAll('.hero__btn, .contact__form button').forEach(btn => {
     });
 });
 
-// Hover эффекты для карточек услуг
-document.querySelectorAll('.service__card').forEach(card => {
-    card.addEventListener('mouseenter', () => {
-        gsap.to(card, {
-            duration: 0.3,
-            y: -10,
-            scale: 1.02,
-            ease: 'power2.out'
+// Hover эффекты для карточек услуг (только для десктопа)
+if (window.innerWidth > 768) {
+    document.querySelectorAll('.service__card').forEach(card => {
+        card.addEventListener('mouseenter', () => {
+            gsap.to(card, {
+                duration: 0.3,
+                y: -10,
+                scale: 1.02,
+                ease: 'power2.out'
+            });
+        });
+        
+        card.addEventListener('mouseleave', () => {
+            gsap.to(card, {
+                duration: 0.3,
+                y: 0,
+                scale: 1,
+                ease: 'power2.out'
+            });
         });
     });
-    
-    card.addEventListener('mouseleave', () => {
-        gsap.to(card, {
-            duration: 0.3,
-            y: 0,
-            scale: 1,
-            ease: 'power2.out'
-        });
-    });
-});
+}
 
-// Hover эффекты для статистики
-document.querySelectorAll('.stat').forEach(stat => {
-    stat.addEventListener('mouseenter', () => {
-        gsap.to(stat, {
-            duration: 0.3,
-            y: -5,
-            scale: 1.05,
-            ease: 'power2.out'
+// Hover эффекты для статистики (только для десктопа)
+if (window.innerWidth > 768) {
+    document.querySelectorAll('.stat').forEach(stat => {
+        stat.addEventListener('mouseenter', () => {
+            gsap.to(stat, {
+                duration: 0.3,
+                y: -5,
+                scale: 1.05,
+                ease: 'power2.out'
+            });
+        });
+        
+        stat.addEventListener('mouseleave', () => {
+            gsap.to(stat, {
+                duration: 0.3,
+                y: 0,
+                scale: 1,
+                ease: 'power2.out'
+            });
         });
     });
-    
-    stat.addEventListener('mouseleave', () => {
-        gsap.to(stat, {
-            duration: 0.3,
-            y: 0,
-            scale: 1,
-            ease: 'power2.out'
-        });
-    });
-});
+}
 
 // Плавная прокрутка для навигации
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
