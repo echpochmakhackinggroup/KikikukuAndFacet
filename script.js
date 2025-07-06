@@ -98,19 +98,74 @@ gsap.from('.stat', {
     ease: 'power3.out'
 });
 
-// Services section
-gsap.from('.service__card', {
-    scrollTrigger: {
-        trigger: '.services__grid',
-        start: 'top 80%',
-        once: true
+// Красивые анимации для карточек услуг
+const serviceCards = document.querySelectorAll('.service__card');
+
+// Анимация появления карточек с эффектом каскада
+gsap.fromTo(serviceCards, 
+    {
+        y: 100,
+        opacity: 0,
+        scale: 0.8,
+        rotationY: 45
     },
-    duration: 1,
-    y: 100,
-    opacity: 0,
-    stagger: 0.3,
-    ease: 'power3.out'
-});
+    {
+        scrollTrigger: {
+            trigger: '.services__grid',
+            start: 'top 80%',
+            once: true
+        },
+        y: 0,
+        opacity: 1,
+        scale: 1,
+        rotationY: 0,
+        duration: 1.2,
+        ease: 'back.out(1.7)',
+        stagger: 0.2
+    }
+);
+
+// Анимация иконок внутри карточек
+gsap.fromTo('.service__icon', 
+    {
+        scale: 0,
+        rotation: -180
+    },
+    {
+        scrollTrigger: {
+            trigger: '.services__grid',
+            start: 'top 80%',
+            once: true
+        },
+        scale: 1,
+        rotation: 0,
+        duration: 0.8,
+        ease: 'elastic.out(1, 0.5)',
+        stagger: 0.3,
+        delay: 0.4
+    }
+);
+
+// Анимация текста в карточках
+gsap.fromTo('.service__card h3, .service__card p', 
+    {
+        y: 30,
+        opacity: 0
+    },
+    {
+        scrollTrigger: {
+            trigger: '.services__grid',
+            start: 'top 80%',
+            once: true
+        },
+        y: 0,
+        opacity: 1,
+        duration: 0.8,
+        ease: 'power3.out',
+        stagger: 0.1,
+        delay: 0.6
+    }
+);
 
 // Contact section
 gsap.from('.contact__form', {

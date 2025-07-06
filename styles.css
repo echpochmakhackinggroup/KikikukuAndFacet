@@ -250,16 +250,27 @@ section {
     text-align: center;
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
+    transform-style: preserve-3d;
+    perspective: 1000px;
+    backface-visibility: hidden;
+    will-change: transform, opacity;
 }
 
 .service__card:hover {
-    transform: translateY(-10px);
+    transform: translateY(-10px) rotateX(5deg);
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+}
+
+.service__card:hover .service__icon {
+    transform: scale(1.1) rotateY(10deg);
 }
 
 .service__icon {
     font-size: 3rem;
     margin-bottom: 1rem;
+    display: inline-block;
+    transition: all 0.3s ease;
+    transform-style: preserve-3d;
 }
 
 .service__card h3 {
