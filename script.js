@@ -358,35 +358,95 @@ if (burger && menu) {
     });
 }
 
-// Анимация при отправке формы
-const contactForm = document.querySelector('.contact__form');
+// Анимация при отправке формы с Firebase
+const contactForm = document.querySelector('#contactForm');
+const formStatus = document.querySelector('#formStatus');
+const submitBtn = document.querySelector('#submitBtn');
+
 if (contactForm) {
-    contactForm.addEventListener('submit', (e) => {
+    contactForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        const submitBtn = contactForm.querySelector('button[type="submit"]');
-        const originalText = submitBtn.textContent;
+        // Получаем данные формы
+        const formData = new FormData(contactForm);
+        const name = formData.get('name');
+        const email = formData.get('email');
+        const message = formData.get('message');
         
-        // Анимация кнопки
-        gsap.to(submitBtn, {
-            duration: 0.3,
-            scale: 0.95,
-            ease: 'power2.out',
-            onComplete: () => {
-                submitBtn.textContent = 'Отправлено!';
-                gsap.to(submitBtn, {
-                    duration: 0.3,
-                    scale: 1,
-                    ease: 'power2.out'
-                });
-                
-                // Возврат к исходному состоянию через 2 секунды
-                setTimeout(() => {
-                    submitBtn.textContent = originalText;
-                    contactForm.reset();
-                }, 2000);
-            }
-        });
+        // Проверяем, что Firebase инициализирован
+        if (typeof firebase === 'undefined') {
+            showStatus('Ошибка: Firebase не подключен', 'error');
+            return;
+        }
+        
+        // Показываем статус загрузки
+        showStatus('Отправляем сообщение...', 'loading');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Отправка...';
+        
+        try {
+            // Сохраняем в Firestore
+            await db.collection('contacts').add({
+                name: name,
+                email: email,
+                message: message,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            // Показываем успех
+            showStatus('Сообщение успешно отправлено!', 'success');
+            
+            // Анимация кнопки
+            gsap.to(submitBtn, {
+                duration: 0.3,
+                scale: 0.95,
+                ease: 'power2.out',
+                onComplete: () => {
+                    submitBtn.textContent = 'Отправлено!';
+                    gsap.to(submitBtn, {
+                        duration: 0.3,
+                        scale: 1,
+                        ease: 'power2.out'
+                    });
+                }
+            });
+            
+            // Очищаем форму
+            contactForm.reset();
+            
+            // Возвращаем кнопку в исходное состояние через 3 секунды
+            setTimeout(() => {
+                submitBtn.textContent = 'Отправить';
+                submitBtn.disabled = false;
+                hideStatus();
+            }, 3000);
+            
+        } catch (error) {
+            console.error('Ошибка отправки:', error);
+            showStatus('Ошибка отправки. Попробуйте еще раз.', 'error');
+            submitBtn.textContent = 'Отправить';
+            submitBtn.disabled = false;
+        }
+    });
+}
+
+// Функции для работы со статусом формы
+function showStatus(message, type) {
+    formStatus.textContent = message;
+    formStatus.className = `form__status ${type}`;
+    
+    gsap.to(formStatus, {
+        duration: 0.3,
+        opacity: 1,
+        ease: 'power2.out'
+    });
+}
+
+function hideStatus() {
+    gsap.to(formStatus, {
+        duration: 0.3,
+        opacity: 0,
+        ease: 'power2.out'
     });
 }
 

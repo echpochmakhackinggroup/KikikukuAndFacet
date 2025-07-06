@@ -8,6 +8,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollToPlugin.min.js"></script>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
     <!-- Header -->
@@ -96,11 +100,12 @@
         <div class="container">
             <h2 class="section__title">Свяжитесь с нами</h2>
             <div class="contact__content">
-                <form class="contact__form">
-                    <input type="text" placeholder="Ваше имя" required>
-                    <input type="email" placeholder="Email" required>
-                    <textarea placeholder="Сообщение" rows="5" required></textarea>
-                    <button type="submit">Отправить</button>
+                <form class="contact__form" id="contactForm">
+                    <input type="text" id="name" name="name" placeholder="Ваше имя" required>
+                    <input type="email" id="email" name="email" placeholder="Email" required>
+                    <textarea id="message" name="message" placeholder="Сообщение" rows="5" required></textarea>
+                    <button type="submit" id="submitBtn">Отправить</button>
+                    <div class="form__status" id="formStatus"></div>
                 </form>
                 <div class="contact__info">
                     <h3>Контакты</h3>
@@ -115,10 +120,11 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
-            <p>&copy; 2025 Все права защищены</p>
+            <p>&copy; 2025 Никакие права незащищены</p>
         </div>
     </footer>
 
+    <script src="firebase-config.js"></script>
     <script src="script.js"></script>
 </body>
 </html> 
