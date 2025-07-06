@@ -330,16 +330,18 @@ modalTriggers.forEach(trigger => {
             gsap.fromTo(modal.querySelector('.modal__content'),
                 { 
                     scale: 0.7, 
-                    y: 50, 
-                    opacity: 0 
+                    opacity: 0,
+                    xPercent: -50,
+                    yPercent: -50
                 },
                 { 
                     scale: 1, 
-                    y: 0, 
                     opacity: 1, 
                     duration: 0.4,
                     ease: 'back.out(1.7)',
-                    delay: 0.1
+                    delay: 0.1,
+                    xPercent: -50,
+                    yPercent: -50
                 }
             );
             
@@ -363,10 +365,11 @@ function closeModal(modal) {
     
     gsap.to(modal.querySelector('.modal__content'), {
         scale: 0.7,
-        y: 50,
         opacity: 0,
         duration: 0.3,
-        ease: 'power2.out'
+        ease: 'power2.out',
+        xPercent: -50,
+        yPercent: -50
     });
 }
 
