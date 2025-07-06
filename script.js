@@ -346,6 +346,13 @@ const modalDescription = document.getElementById('modalDescription');
 const modalDetails = document.getElementById('modalDetails');
 
 function openModal(data) {
+    console.log('Открытие модального окна:', data);
+    
+    if (!modalIcon || !modalTitle || !modalDescription || !modalDetails || !modalOverlay) {
+        console.error('Не найдены элементы модального окна!');
+        return;
+    }
+    
     modalIcon.textContent = data.icon;
     modalTitle.textContent = data.title;
     modalDescription.textContent = data.description;
@@ -364,6 +371,8 @@ function openModal(data) {
         { scale: 0.8, y: 50 },
         { scale: 1, y: 0, duration: 0.4, ease: 'back.out(1.7)' }
     );
+    
+    console.log('Модальное окно открыто!');
 }
 
 function closeModal() {
@@ -395,8 +404,13 @@ document.querySelectorAll('.service__card').forEach((card, index) => {
     const cardTypes = ['design', 'development', 'gamedev'];
     const cardType = cardTypes[index];
     
+    console.log(`Настройка карточки ${index}: ${cardType}`);
+    
     // Клик для открытия модального окна
-    card.addEventListener('click', () => {
+    card.addEventListener('click', (e) => {
+        console.log(`Клик по карточке ${cardType}`);
+        e.preventDefault();
+        e.stopPropagation();
         openModal(modalData[cardType]);
     });
     
@@ -416,6 +430,16 @@ document.querySelectorAll('.service__card').forEach((card, index) => {
             ease: 'power2.out'
         });
     });
+});
+
+// Проверяем, что модальные элементы найдены
+console.log('Модальные элементы:', {
+    overlay: document.getElementById('modalOverlay'),
+    close: document.getElementById('modalClose'),
+    icon: document.getElementById('modalIcon'),
+    title: document.getElementById('modalTitle'),
+    description: document.getElementById('modalDescription'),
+    details: document.getElementById('modalDetails')
 });
 
 // Hover эффекты для статистики (только для десктопа)
