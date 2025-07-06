@@ -1,5 +1,5 @@
-// Инициализация GSAP ScrollTrigger
-gsap.registerPlugin(ScrollTrigger);
+// Инициализация GSAP плагинов
+gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
 // Оптимизация для очень маленьких экранов
 const isSmallScreen = window.innerWidth <= 320;
@@ -58,14 +58,13 @@ window.addEventListener('load', () => {
     });
 });
 
-// Анимации при скролле
+// Анимации при скролле (однократное проигрывание)
 // About section
 gsap.from('.about__text', {
     scrollTrigger: {
         trigger: '.about__text',
         start: 'top 80%',
-        end: 'bottom 20%',
-        toggleActions: 'play none none none'
+        once: true
     },
     duration: 1,
     x: -100,
@@ -77,8 +76,7 @@ gsap.from('.about__stats', {
     scrollTrigger: {
         trigger: '.about__stats',
         start: 'top 80%',
-        end: 'bottom 20%',
-        toggleActions: 'play none none none'
+        once: true
     },
     duration: 1,
     x: 100,
@@ -91,8 +89,7 @@ gsap.from('.stat', {
     scrollTrigger: {
         trigger: '.about__stats',
         start: 'top 80%',
-        end: 'bottom 20%',
-        toggleActions: 'play none none none'
+        once: true
     },
     duration: 0.8,
     y: 50,
@@ -106,8 +103,7 @@ gsap.from('.service__card', {
     scrollTrigger: {
         trigger: '.services__grid',
         start: 'top 80%',
-        end: 'bottom 20%',
-        toggleActions: 'play none none none'
+        once: true
     },
     duration: 1,
     y: 100,
@@ -121,8 +117,7 @@ gsap.from('.contact__form', {
     scrollTrigger: {
         trigger: '.contact__form',
         start: 'top 80%',
-        end: 'bottom 20%',
-        toggleActions: 'play none none none'
+        once: true
     },
     duration: 1,
     x: -100,
@@ -134,8 +129,7 @@ gsap.from('.contact__info', {
     scrollTrigger: {
         trigger: '.contact__info',
         start: 'top 80%',
-        end: 'bottom 20%',
-        toggleActions: 'play none none none'
+        once: true
     },
     duration: 1,
     x: 100,
@@ -148,8 +142,7 @@ gsap.from('.section__title', {
     scrollTrigger: {
         trigger: '.section__title',
         start: 'top 80%',
-        end: 'bottom 20%',
-        toggleActions: 'play none none none'
+        once: true
     },
     duration: 1,
     y: 50,
@@ -172,13 +165,15 @@ if (!isSmallScreen) {
     });
 }
 
-// Анимация header при скролле
+// Анимация header при скролле и активная навигация
 let lastScrollY = window.scrollY;
 const header = document.querySelector('.header');
+const navLinks = document.querySelectorAll('.nav__menu a');
 
 window.addEventListener('scroll', () => {
     const currentScrollY = window.scrollY;
     
+    // Скрытие/показ header
     if (currentScrollY > lastScrollY && currentScrollY > 100) {
         // Скролл вниз
         gsap.to(header, {
@@ -194,6 +189,26 @@ window.addEventListener('scroll', () => {
             ease: 'power3.out'
         });
     }
+    
+    // Активная навигация
+    const sections = document.querySelectorAll('section[id]');
+    let current = '';
+    
+    sections.forEach(section => {
+        const sectionTop = section.offsetTop - 100;
+        const sectionHeight = section.offsetHeight;
+        
+        if (currentScrollY >= sectionTop && currentScrollY < sectionTop + sectionHeight) {
+            current = section.getAttribute('id');
+        }
+    });
+    
+    navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === `#${current}`) {
+            link.classList.add('active');
+        }
+    });
     
     lastScrollY = currentScrollY;
 });
@@ -268,10 +283,23 @@ if (window.innerWidth > 768) {
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
         e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
+        const targetId = this.getAttribute('href');
+        const target = document.querySelector(targetId);
+        
         if (target) {
+            // Закрываем мобильное меню если оно открыто
+            const menu = document.querySelector('.nav__menu');
+            if (menu && menu.classList.contains('active')) {
+                menu.classList.remove('active');
+                const spans = document.querySelectorAll('.nav__burger span');
+                gsap.to(spans[0], { rotation: 0, y: 0 });
+                gsap.to(spans[1], { opacity: 1 });
+                gsap.to(spans[2], { rotation: 0, y: 0 });
+            }
+            
+            // Плавная прокрутка к секции
             gsap.to(window, {
-                duration: 1,
+                duration: 1.2,
                 scrollTo: {
                     y: target,
                     offsetY: 80
@@ -298,7 +326,7 @@ const animateCounters = () => {
                 scrollTrigger: {
                     trigger: counter,
                     start: 'top 80%',
-                    toggleActions: 'play none none reverse'
+                    once: true
                 }
             }
         );

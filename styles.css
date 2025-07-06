@@ -67,6 +67,23 @@ body {
     color: #2563eb;
 }
 
+.nav__menu a.active {
+    color: #2563eb;
+    font-weight: 600;
+    position: relative;
+}
+
+.nav__menu a.active::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: #2563eb;
+    border-radius: 1px;
+}
+
 .nav__burger {
     display: none;
     flex-direction: column;
