@@ -577,6 +577,15 @@ section {
         top: 0.5rem;
         right: 1rem;
         font-size: 1.5rem;
+        width: 28px;
+        height: 28px;
+    }
+    
+    /* Скрываем крестик на очень маленьких экранах */
+    @media (max-width: 480px) {
+        .modal__close {
+            display: none;
+        }
     }
     
     .service__icon {
