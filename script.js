@@ -390,80 +390,31 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-// Pressure.js для карточек услуг
+// Интерактивные карточки услуг
 document.querySelectorAll('.service__card').forEach((card, index) => {
     const cardTypes = ['design', 'development', 'gamedev'];
     const cardType = cardTypes[index];
     
-    // Настройка Pressure.js с поддержкой всех устройств
-    Pressure.set(card, {
-        // Поддержка всех типов устройств
-        only: 'pointer', // Только pointer events для совместимости
-        
-        // Обработчики для разных устройств
-        start: () => {
-            card.classList.add('pressure-active');
-            gsap.to(card, {
-                duration: 0.2,
-                scale: 0.95,
-                ease: 'power2.out'
-            });
-        },
-        
-        end: () => {
-            card.classList.remove('pressure-active');
-            gsap.to(card, {
-                duration: 0.2,
-                scale: 1,
-                ease: 'power2.out'
-            });
-        },
-        
-        // Обработка давления (для устройств с поддержкой)
-        change: (force, event) => {
-            if (force > 0.5) {
-                gsap.to(card, {
-                    duration: 0.1,
-                    scale: 0.9 + (force * 0.1),
-                    ease: 'power2.out'
-                });
-            }
-        },
-        
-        // Обработка отпускания
-        endDeepPress: () => {
-            // Открываем модальное окно при глубоком нажатии
-            openModal(modalData[cardType]);
-        },
-        
-        // Fallback для устройств без поддержки давления
-        unsupported: () => {
-            // Обычный клик для устройств без поддержки Pressure.js
-            card.addEventListener('click', () => {
-                openModal(modalData[cardType]);
-            });
-        }
+    // Клик для открытия модального окна
+    card.addEventListener('click', () => {
+        openModal(modalData[cardType]);
     });
     
     // Hover эффекты
     card.addEventListener('mouseenter', () => {
-        if (!card.classList.contains('pressure-active')) {
-            gsap.to(card, {
-                duration: 0.3,
-                scale: 1.05,
-                ease: 'power2.out'
-            });
-        }
+        gsap.to(card, {
+            duration: 0.3,
+            scale: 1.05,
+            ease: 'power2.out'
+        });
     });
     
     card.addEventListener('mouseleave', () => {
-        if (!card.classList.contains('pressure-active')) {
-            gsap.to(card, {
-                duration: 0.3,
-                scale: 1,
-                ease: 'power2.out'
-            });
-        }
+        gsap.to(card, {
+            duration: 0.3,
+            scale: 1,
+            ease: 'power2.out'
+        });
     });
 });
 

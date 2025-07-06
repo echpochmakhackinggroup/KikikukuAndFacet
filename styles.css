@@ -349,16 +349,17 @@ section {
     line-height: 1.8;
 }
 
-/* Pressure.js cursor styles */
+/* Интерактивные карточки */
 .service__card {
     cursor: pointer;
     user-select: none;
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
+    transition: all 0.3s ease;
 }
 
-.service__card.pressure-active {
+.service__card:active {
     transform: scale(0.95);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
