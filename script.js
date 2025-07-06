@@ -317,31 +317,29 @@ modalTriggers.forEach(trigger => {
             // Показываем модальное окно
             modal.style.display = 'flex';
             
-            // Анимация появления
+            // Анимация появления в стиле Apple
             gsap.fromTo(modal, 
                 { opacity: 0 },
                 { 
                     opacity: 1, 
-                    duration: 0.3,
-                    ease: 'power2.out'
+                    duration: 0.4,
+                    ease: 'power3.out'
                 }
             );
             
             gsap.fromTo(modal.querySelector('.modal__content'),
                 { 
-                    scale: 0.7, 
+                    scale: 0.8, 
                     opacity: 0,
-                    xPercent: -50,
-                    yPercent: -50
+                    y: 30
                 },
                 { 
                     scale: 1, 
                     opacity: 1, 
-                    duration: 0.4,
-                    ease: 'back.out(1.7)',
-                    delay: 0.1,
-                    xPercent: -50,
-                    yPercent: -50
+                    y: 0,
+                    duration: 0.5,
+                    ease: 'back.out(1.2)',
+                    delay: 0.1
                 }
             );
             
@@ -364,12 +362,11 @@ function closeModal(modal) {
     });
     
     gsap.to(modal.querySelector('.modal__content'), {
-        scale: 0.7,
+        scale: 0.8,
         opacity: 0,
+        y: 30,
         duration: 0.3,
-        ease: 'power2.out',
-        xPercent: -50,
-        yPercent: -50
+        ease: 'power2.out'
     });
 }
 
