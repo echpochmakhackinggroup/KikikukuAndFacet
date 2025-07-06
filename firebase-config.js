@@ -1,12 +1,13 @@
 // Firebase конфигурация
-// Замените на ваши реальные данные из Firebase Console
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyA0SHaJ4MoO50Vx1u59gPpmXer5bNjBdZk",
+    authDomain: "sait-s-vitoi.firebaseapp.com",
+    databaseURL: "https://sait-s-vitoi-default-rtdb.firebaseio.com",
+    projectId: "sait-s-vitoi",
+    storageBucket: "sait-s-vitoi.firebasestorage.app",
+    messagingSenderId: "182870319147",
+    appId: "1:182870319147:web:2b4301d6c2232c8bed4a6e",
+    measurementId: "G-3T12739LZB"
 };
 
 // Инициализация Firebase
