@@ -8,6 +8,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollToPlugin.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pressure/2.2.0/pressure.min.js"></script>
     
 
 </head>
@@ -51,7 +52,7 @@
                 </div>
                 <div class="about__stats">
                     <div class="stat">
-                        <h3>0+</h3>
+                        <h3>1</h3>
                         <p>Проектов</p>
                     </div>
                     <div class="stat">
@@ -85,13 +86,24 @@
                 <div class="service__card">
                     <div class="service__icon">📱</div>
                     <h3>Геймдев</h3>
-                    <p>Сделали визульную новеллу на renpy</p>
+                    <p>Сделали визуальную новеллу на renpy</p>
                 </div>
             </div>
         </div>
     </section>
 
-
+    <!-- Modal Overlays -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-content">
+            <button class="modal-close" id="modalClose">&times;</button>
+            <div class="modal-body">
+                <div class="modal-icon" id="modalIcon"></div>
+                <h2 class="modal-title" id="modalTitle"></h2>
+                <p class="modal-description" id="modalDescription"></p>
+                <div class="modal-details" id="modalDetails"></div>
+            </div>
+        </div>
+    </div>
 
     <!-- Footer -->
     <footer class="footer">

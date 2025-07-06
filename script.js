@@ -288,28 +288,184 @@ document.querySelectorAll('.hero__btn, .contact__form button').forEach(btn => {
     });
 });
 
-// Hover эффекты для карточек услуг (только для десктопа)
-if (window.innerWidth > 768) {
-    document.querySelectorAll('.service__card').forEach(card => {
-        card.addEventListener('mouseenter', () => {
+// Данные для модальных окон
+const modalData = {
+    'design': {
+        icon: '🎨',
+        title: 'Дизайн',
+        description: 'Виточка красиво рисует',
+        details: `
+            <h3>Наши возможности в дизайне:</h3>
+            <ul>
+                <li>Создание логотипов и брендинга</li>
+                <li>Веб-дизайн и UI/UX</li>
+                <li>Иллюстрации и графика</li>
+                <li>Анимации и интерактивные элементы</li>
+            </ul>
+            <p><strong>Виточка</strong> - наш главный дизайнер, который превращает идеи в красивые визуальные решения.</p>
+        `
+    },
+    'development': {
+        icon: '💻',
+        title: 'Разработка',
+        description: 'Курсовую делал в матлабе да',
+        details: `
+            <h3>Наши технические навыки:</h3>
+            <ul>
+                <li>MATLAB и научные вычисления</li>
+                <li>Веб-разработка (HTML, CSS, JavaScript)</li>
+                <li>Python и автоматизация</li>
+                <li>Анализ данных и визуализация</li>
+            </ul>
+            <p>Да, мы действительно делали курсовую в MATLAB! И не только её...</p>
+        `
+    },
+    'gamedev': {
+        icon: '📱',
+        title: 'Геймдев',
+        description: 'Сделали визуальную новеллу на renpy',
+        details: `
+            <h3>Наши игровые проекты:</h3>
+            <ul>
+                <li>Визуальные новеллы на Ren'Py</li>
+                <li>Интерактивные истории</li>
+                <li>Прототипы игр</li>
+                <li>Игровые механики</li>
+            </ul>
+            <p>Создали полноценную визуальную новеллу с множеством выборов и концовок!</p>
+        `
+    }
+};
+
+// Модальные окна
+const modalOverlay = document.getElementById('modalOverlay');
+const modalClose = document.getElementById('modalClose');
+const modalIcon = document.getElementById('modalIcon');
+const modalTitle = document.getElementById('modalTitle');
+const modalDescription = document.getElementById('modalDescription');
+const modalDetails = document.getElementById('modalDetails');
+
+function openModal(data) {
+    modalIcon.textContent = data.icon;
+    modalTitle.textContent = data.title;
+    modalDescription.textContent = data.description;
+    modalDetails.innerHTML = data.details;
+    
+    modalOverlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    
+    // GSAP анимация открытия
+    gsap.fromTo(modalOverlay, 
+        { opacity: 0 },
+        { opacity: 1, duration: 0.3, ease: 'power2.out' }
+    );
+    
+    gsap.fromTo('.modal-content',
+        { scale: 0.8, y: 50 },
+        { scale: 1, y: 0, duration: 0.4, ease: 'back.out(1.7)' }
+    );
+}
+
+function closeModal() {
+    modalOverlay.classList.remove('active');
+    document.body.style.overflow = '';
+    
+    // GSAP анимация закрытия
+    gsap.to(modalOverlay, { opacity: 0, duration: 0.3, ease: 'power2.out' });
+    gsap.to('.modal-content', { scale: 0.8, y: 50, duration: 0.3, ease: 'power2.in' });
+}
+
+// Обработчики модальных окон
+modalClose.addEventListener('click', closeModal);
+modalOverlay.addEventListener('click', (e) => {
+    if (e.target === modalOverlay) {
+        closeModal();
+    }
+});
+
+// Закрытие по Escape
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modalOverlay.classList.contains('active')) {
+        closeModal();
+    }
+});
+
+// Pressure.js для карточек услуг
+document.querySelectorAll('.service__card').forEach((card, index) => {
+    const cardTypes = ['design', 'development', 'gamedev'];
+    const cardType = cardTypes[index];
+    
+    // Настройка Pressure.js с поддержкой всех устройств
+    Pressure.set(card, {
+        // Поддержка всех типов устройств
+        only: 'pointer', // Только pointer events для совместимости
+        
+        // Обработчики для разных устройств
+        start: () => {
+            card.classList.add('pressure-active');
             gsap.to(card, {
-                duration: 0.3,
-                y: -10,
-                scale: 1.02,
+                duration: 0.2,
+                scale: 0.95,
                 ease: 'power2.out'
             });
-        });
+        },
         
-        card.addEventListener('mouseleave', () => {
+        end: () => {
+            card.classList.remove('pressure-active');
             gsap.to(card, {
-                duration: 0.3,
-                y: 0,
+                duration: 0.2,
                 scale: 1,
                 ease: 'power2.out'
             });
-        });
+        },
+        
+        // Обработка давления (для устройств с поддержкой)
+        change: (force, event) => {
+            if (force > 0.5) {
+                gsap.to(card, {
+                    duration: 0.1,
+                    scale: 0.9 + (force * 0.1),
+                    ease: 'power2.out'
+                });
+            }
+        },
+        
+        // Обработка отпускания
+        endDeepPress: () => {
+            // Открываем модальное окно при глубоком нажатии
+            openModal(modalData[cardType]);
+        },
+        
+        // Fallback для устройств без поддержки давления
+        unsupported: () => {
+            // Обычный клик для устройств без поддержки Pressure.js
+            card.addEventListener('click', () => {
+                openModal(modalData[cardType]);
+            });
+        }
     });
-}
+    
+    // Hover эффекты
+    card.addEventListener('mouseenter', () => {
+        if (!card.classList.contains('pressure-active')) {
+            gsap.to(card, {
+                duration: 0.3,
+                scale: 1.05,
+                ease: 'power2.out'
+            });
+        }
+    });
+    
+    card.addEventListener('mouseleave', () => {
+        if (!card.classList.contains('pressure-active')) {
+            gsap.to(card, {
+                duration: 0.3,
+                scale: 1,
+                ease: 'power2.out'
+            });
+        }
+    });
+});
 
 // Hover эффекты для статистики (только для десктопа)
 if (window.innerWidth > 768) {
