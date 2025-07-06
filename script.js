@@ -288,8 +288,8 @@ document.querySelectorAll('.hero__btn, .contact__form button').forEach(btn => {
     });
 });
 
-// Модальные окна для карточек услуг
-const modalTriggers = document.querySelectorAll('.service__card[data-modal]');
+// Модальные окна для карточек услуг и статистики
+const modalTriggers = document.querySelectorAll('.service__card[data-modal], .stat[data-modal]');
 const modals = document.querySelectorAll('.modal');
 const modalCloses = document.querySelectorAll('.modal__close');
 
@@ -300,7 +300,7 @@ modalTriggers.forEach(trigger => {
         const modal = document.getElementById(`modal-${modalId}`);
         
         if (modal) {
-            // Анимация карточки при клике
+            // Анимация элемента при клике
             gsap.to(trigger, {
                 duration: 0.2,
                 scale: 0.95,
