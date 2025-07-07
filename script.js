@@ -700,13 +700,13 @@ function setHeroBackgroundByTime() {
     if (hour >= 6 && hour < 11) { // Утро
         bg = 'linear-gradient(135deg, #ffb347 0%, #ffcc80 100%)';
         color = '#fff';
-    } else if (hour >= 11 && hour < 18) { // День
+    } else if (hour >= 11 && hour < 17) { // День
         bg = 'linear-gradient(135deg, #667eea 0%, #2563eb 100%)';
         color = '#fff';
-    } else if (hour >= 18 && hour < 22) { // Вечер
+    } else if (hour >= 17 && hour < 21) { // Вечер
         bg = 'linear-gradient(135deg, #ff9800 0%, #ffb347 100%)';
         color = '#fff';
-    } else { // Ночь
+    } else { // Ночьвыполни команды 
         bg = 'linear-gradient(135deg, #232526 0%, #000000 100%)';
         color = '#fff';
     }
