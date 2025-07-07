@@ -747,7 +747,7 @@ section {
 .big-modal .modal__content {
     background: #fff;
     width: 98vw;
-    height: 98vh;
+    height: 90vh;
     min-height: unset;
     max-width: unset;
     max-height: unset;
