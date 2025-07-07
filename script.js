@@ -700,13 +700,13 @@ function setHeroBackgroundByTime() {
     if (hour >= 6 && hour < 11) { // Утро
         bg = 'linear-gradient(135deg, #ffb347 0%, #ffcc80 100%)';
         color = '#fff';
-    } else if (hour >= 11 && hour < 17) { // День
+    } else if (hour >= 11 && hour < 16) { // День
         bg = 'linear-gradient(135deg, #667eea 0%, #2563eb 100%)';
         color = '#fff';
-    } else if (hour >= 17 && hour < 21) { // Вечер
+    } else if (hour >= 16 && hour < 21) { // Вечер
         bg = 'linear-gradient(135deg, #ff9800 0%, #ffb347 100%)';
         color = '#fff';
-    } else { // Ночьвыполни команды 
+    } else { // Ночь
         bg = 'linear-gradient(135deg, #232526 0%, #000000 100%)';
         color = '#fff';
     }
@@ -750,4 +750,29 @@ setInterval(setHeroBackgroundByTime, 60000);
             };
         }, 300);
     });
+})();
+
+// --- Тёмная тема ---
+(function setupDarkThemeToggle() {
+    const btn = document.getElementById('toggle-dark-theme');
+    if (!btn) return;
+    const body = document.body;
+    // Проверяем сохранённую тему
+    const saved = localStorage.getItem('theme');
+    if (saved === 'dark') {
+        body.classList.add('dark-theme');
+        btn.textContent = '☀️ Светлая тема';
+    }
+    btn.onclick = function() {
+        body.classList.add('theme-anim');
+        setTimeout(() => body.classList.remove('theme-anim'), 350);
+        const isDark = body.classList.toggle('dark-theme');
+        if (isDark) {
+            btn.textContent = '☀️ Светлая тема';
+            localStorage.setItem('theme', 'dark');
+        } else {
+            btn.textContent = '🌙 Тёмная тема';
+            localStorage.setItem('theme', 'light');
+        }
+    };
 })(); 
