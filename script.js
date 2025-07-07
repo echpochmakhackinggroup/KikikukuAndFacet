@@ -713,4 +713,41 @@ function setHeroBackgroundByTime() {
     gsap.to(hero, { background: bg, color: color, duration: 1.5, ease: 'power2.inOut' });
 }
 setHeroBackgroundByTime();
-setInterval(setHeroBackgroundByTime, 60000); 
+setInterval(setHeroBackgroundByTime, 60000);
+
+// --- Кот в modal-page2 ---
+(function setupCatModalPage2() {
+    const page2Btn = document.querySelector('.big-modal-btn[data-modal="page2"]');
+    if (!page2Btn) return;
+    page2Btn.addEventListener('click', () => {
+        setTimeout(() => {
+            const btn = document.getElementById('show-cat-btn');
+            const container = document.getElementById('cat-photo-container');
+            if (!btn || !container) return;
+            btn.onclick = async function() {
+                btn.disabled = true;
+                btn.textContent = 'Мяумяумяумяу';
+                container.innerHTML = '';
+                try {
+                    const resp = await fetch('https://api.thecatapi.com/v1/images/search');
+                    const data = await resp.json();
+                    if (data && data[0] && data[0].url) {
+                        const img = document.createElement('img');
+                        img.src = data[0].url;
+                        img.alt = 'Котик';
+                        img.style.maxWidth = '100%';
+                        img.style.borderRadius = '1em';
+                        img.style.boxShadow = '0 4px 24px rgba(38,99,235,0.10)';
+                        container.appendChild(img);
+                    } else {
+                        container.textContent = 'Не удалось получить кота :('; 
+                    }
+                } catch (e) {
+                    container.textContent = 'Ошибка загрузки кота :('; 
+                }
+                btn.disabled = false;
+                btn.textContent = 'Показать кота';
+            };
+        }, 300);
+    });
+})(); 
