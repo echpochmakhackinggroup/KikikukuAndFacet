@@ -495,6 +495,35 @@ const animateCounters = () => {
     });
 };
 
+// Динамически вычисляем количество дней опыта с 05.07.2025
+(function updateExperienceDays() {
+    function getDayWord(n) {
+        n = Math.abs(n) % 100;
+        const n1 = n % 10;
+        if (n > 10 && n < 20) return 'дней';
+        if (n1 > 1 && n1 < 5) return 'дня';
+        if (n1 === 1) return 'день';
+        return 'дней';
+    }
+    const experienceElem = document.getElementById('experience-days');
+    const experienceModalElem = document.getElementById('experience-days-modal');
+    const experienceWordElem = document.getElementById('experience-days-word');
+    const experienceModalWordElem = document.getElementById('experience-days-modal-word');
+    if (experienceElem || experienceModalElem) {
+        const startDate = new Date(2025, 6, 5); // Месяцы с 0, июль = 6
+        const today = new Date();
+        startDate.setHours(0,0,0,0);
+        today.setHours(0,0,0,0);
+        const diffTime = today - startDate;
+        const diffDays = Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
+        if (experienceElem) experienceElem.textContent = diffDays;
+        if (experienceModalElem) experienceModalElem.textContent = diffDays;
+        const word = getDayWord(diffDays);
+        if (experienceWordElem) experienceWordElem.textContent = word;
+        if (experienceModalWordElem) experienceModalWordElem.textContent = word;
+    }
+})();
+
 // Запуск анимации счетчиков
 animateCounters();
 
@@ -519,8 +548,6 @@ if (burger && menu) {
         }
     });
 }
-
-
 
 // Дополнительные эффекты
 // Анимация при наведении на навигацию
@@ -554,4 +581,12 @@ gsap.to('.hero', {
     ease: 'none'
 });
 
-console.log('GSAP анимации загружены! 🎉'); 
+console.log('GSAP анимации загружены! 🎉');
+
+// Динамически подставляем текущий год в футер
+(function setCurrentYear() {
+    const yearElem = document.getElementById('current-year');
+    if (yearElem) {
+        yearElem.textContent = new Date().getFullYear();
+    }
+})(); 
