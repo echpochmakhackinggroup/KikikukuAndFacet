@@ -819,11 +819,11 @@ section {
         transform: none !important;
         width: 100% !important;
         max-width: 100% !important;
-        height: auto !important;
+        z-index: 10;
     }
     #modal-page1 .modal__body {
-        padding-top: 180px;
-        padding-bottom: 180px;
+        padding-top: 1.5rem;
+        padding-bottom: 1.5rem;
     }
 }
 
@@ -847,9 +847,9 @@ section {
     }
 }
 
-.desktop-only { display: inline; }
+.desktop-only { display: block; }
 .mobile-only { display: none; }
 @media (max-width: 700px) {
   .desktop-only { display: none !important; }
-  .mobile-only { display: inline !important; }
+  .mobile-only { display: block !important; }
 } 
