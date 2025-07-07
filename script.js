@@ -532,20 +532,41 @@ const burger = document.querySelector('.nav__burger');
 const menu = document.querySelector('.nav__menu');
 
 if (burger && menu) {
+    let menuOpen = false;
     burger.addEventListener('click', () => {
-        menu.classList.toggle('active');
-        
-        // Анимация бургер меню
         const spans = burger.querySelectorAll('span');
-        if (menu.classList.contains('active')) {
+        if (!menuOpen) {
+            menu.classList.add('active');
+            gsap.fromTo(menu, { y: -40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: 'power3.out' });
             gsap.to(spans[0], { rotation: 45, y: 7 });
             gsap.to(spans[1], { opacity: 0 });
             gsap.to(spans[2], { rotation: -45, y: -7 });
         } else {
+            gsap.to(menu, { y: -40, opacity: 0, duration: 0.3, ease: 'power3.in', onComplete: () => {
+                menu.classList.remove('active');
+                gsap.set(menu, { clearProps: 'all' });
+            }});
             gsap.to(spans[0], { rotation: 0, y: 0 });
             gsap.to(spans[1], { opacity: 1 });
             gsap.to(spans[2], { rotation: 0, y: 0 });
         }
+        menuOpen = !menuOpen;
+    });
+
+    // Закрытие меню при клике на пункт
+    menu.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+            if (menuOpen) {
+                gsap.to(menu, { y: -40, opacity: 0, duration: 0.3, ease: 'power3.in', onComplete: () => {
+                    menu.classList.remove('active');
+                    gsap.set(menu, { clearProps: 'all' });
+                    menuOpen = false;
+                }});
+                gsap.to(spans[0], { rotation: 0, y: 0 });
+                gsap.to(spans[1], { opacity: 1 });
+                gsap.to(spans[2], { rotation: 0, y: 0 });
+            }
+        });
     });
 }
 
@@ -589,4 +610,107 @@ console.log('GSAP анимации загружены! 🎉');
     if (yearElem) {
         yearElem.textContent = new Date().getFullYear();
     }
-})(); 
+})();
+
+// Открытие больших модальных окон-страниц
+const bigModalBtns = document.querySelectorAll('.big-modal-btn');
+bigModalBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        const modalId = btn.getAttribute('data-modal');
+        const modal = document.getElementById(`modal-${modalId}`);
+        if (modal) {
+            modal.style.display = 'flex';
+            gsap.fromTo(modal, { opacity: 0 }, { opacity: 1, duration: 0.4, ease: 'power3.out' });
+            gsap.fromTo(modal.querySelector('.modal__content'),
+                { scale: 0.95, opacity: 0, y: 40 },
+                { scale: 1, opacity: 1, y: 0, duration: 0.5, ease: 'back.out(1.2)', delay: 0.1 }
+            );
+            document.body.style.overflow = 'hidden';
+        }
+    });
+});
+
+// --- Video Scrubbing Demo for modal-page1 ---
+function setupVideoScrubbingModal() {
+    const modal = document.getElementById('modal-page1');
+    if (!modal) return;
+    const video = modal.querySelector('#video-1');
+    if (!video) return;
+
+    // Скролл-обсервер
+    function getScrollPercent() {
+        const body = modal.querySelector('.modal__body');
+        if (!body) return 0;
+        const scrollTop = body.scrollTop;
+        const scrollHeight = body.scrollHeight - body.clientHeight;
+        return scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+    }
+
+    let rafId = null;
+    function onScroll() {
+        if (rafId) cancelAnimationFrame(rafId);
+        rafId = requestAnimationFrame(() => {
+            const percent = getScrollPercent();
+            if (video.duration) {
+                const updateTimeTo = (video.duration / 100) * percent;
+                if (Math.abs(video.currentTime - updateTimeTo) > 0.01) {
+                    video.currentTime = updateTimeTo;
+                }
+            }
+        });
+    }
+
+    // Сброс
+    function cleanup() {
+        const body = modal.querySelector('.modal__body');
+        if (body) body.removeEventListener('scroll', onScroll);
+    }
+
+    // Инициализация
+    video.currentTime = 0;
+    video.pause();
+    const body = modal.querySelector('.modal__body');
+    if (body) body.addEventListener('scroll', onScroll);
+    // Очищаем при закрытии
+    const close = modal.querySelector('.modal__close');
+    if (close) close.addEventListener('click', cleanup);
+    modal.addEventListener('click', e => {
+        if (e.target === modal) cleanup();
+    });
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && modal.style.display === 'flex') cleanup();
+    });
+}
+
+// Автоинициализация при открытии модалки
+const page1Btn = document.querySelector('.big-modal-btn[data-modal="page1"]');
+if (page1Btn) {
+    page1Btn.addEventListener('click', () => {
+        setTimeout(setupVideoScrubbingModal, 300);
+    });
+}
+
+// Динамическая смена фона секции #home (hero) по времени суток
+function setHeroBackgroundByTime() {
+    const hero = document.getElementById('home') || document.querySelector('.hero');
+    if (!hero) return;
+    const now = new Date();
+    const hour = now.getHours();
+    let bg, color;
+    if (hour >= 6 && hour < 11) { // Утро
+        bg = 'linear-gradient(135deg, #ffb347 0%, #ffcc80 100%)';
+        color = '#fff';
+    } else if (hour >= 11 && hour < 18) { // День
+        bg = 'linear-gradient(135deg, #667eea 0%, #2563eb 100%)';
+        color = '#fff';
+    } else if (hour >= 18 && hour < 22) { // Вечер
+        bg = 'linear-gradient(135deg, #ff9800 0%, #ffb347 100%)';
+        color = '#fff';
+    } else { // Ночь
+        bg = 'linear-gradient(135deg, #232526 0%, #000000 100%)';
+        color = '#fff';
+    }
+    gsap.to(hero, { background: bg, color: color, duration: 1.5, ease: 'power2.inOut' });
+}
+setHeroBackgroundByTime();
+setInterval(setHeroBackgroundByTime, 60000); 
