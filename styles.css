@@ -813,8 +813,12 @@ section {
 }
 @media (max-width: 700px) {
     #modal-page1 .video-container {
-        width: 95vw !important;
-        max-width: 95vw !important;
+        position: static !important;
+        top: auto !important;
+        left: auto !important;
+        transform: none !important;
+        width: 100% !important;
+        max-width: 100% !important;
         height: auto !important;
     }
     #modal-page1 .modal__body {
@@ -841,4 +845,11 @@ section {
         padding: 1rem 0.5rem;
         border-radius: 10px;
     }
+}
+
+.desktop-only { display: inline; }
+.mobile-only { display: none; }
+@media (max-width: 700px) {
+  .desktop-only { display: none !important; }
+  .mobile-only { display: inline !important; }
 } 
