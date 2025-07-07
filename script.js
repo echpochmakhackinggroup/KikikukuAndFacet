@@ -757,22 +757,46 @@ setInterval(setHeroBackgroundByTime, 60000);
     const btn = document.getElementById('toggle-dark-theme');
     if (!btn) return;
     const body = document.body;
-    // Проверяем сохранённую тему
-    const saved = localStorage.getItem('theme');
-    if (saved === 'dark') {
-        body.classList.add('dark-theme');
-        btn.textContent = '☀️ Светлая тема';
+    function setBtnText(isDark) {
+        btn.textContent = isDark ? '☀️ Светлая тема' : '🌙 Тёмная тема';
     }
+    function applyThemeByTime() {
+        const hour = new Date().getHours();
+        if (hour >= 18 || hour < 7) {
+            body.classList.add('dark-theme');
+            setBtnText(true);
+        } else {
+            body.classList.remove('dark-theme');
+            setBtnText(false);
+        }
+    }
+    applyThemeByTime();
     btn.onclick = function() {
         body.classList.add('theme-anim');
         setTimeout(() => body.classList.remove('theme-anim'), 350);
         const isDark = body.classList.toggle('dark-theme');
-        if (isDark) {
-            btn.textContent = '☀️ Светлая тема';
-            localStorage.setItem('theme', 'dark');
-        } else {
-            btn.textContent = '🌙 Тёмная тема';
-            localStorage.setItem('theme', 'light');
-        }
+        setBtnText(isDark);
     };
+    // Автоматически обновлять тему каждый час
+    setInterval(applyThemeByTime, 60 * 1000);
+})();
+
+// --- Классы времени суток для body ---
+(function setTimeOfDayClass() {
+    function updateTimeClass() {
+        const hour = new Date().getHours();
+        const body = document.body;
+        body.classList.remove('morning', 'day', 'evening', 'night');
+        if (hour >= 6 && hour < 11) {
+            body.classList.add('morning');
+        } else if (hour >= 11 && hour < 18) {
+            body.classList.add('day');
+        } else if (hour >= 18 && hour < 22) {
+            body.classList.add('evening');
+        } else {
+            body.classList.add('night');
+        }
+    }
+    updateTimeClass();
+    setInterval(updateTimeClass, 60 * 1000);
 })(); 

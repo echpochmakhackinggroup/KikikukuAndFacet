@@ -47,7 +47,16 @@ body {
 .nav__logo {
     font-size: 1.5rem;
     font-weight: bold;
-    color: #2563eb;
+    color: #18181a;
+    transition: color 0.4s, text-shadow 0.4s;
+}
+body.dark-theme .nav__logo {
+    color: #fff;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.10);
+}
+body:not(.dark-theme).morning .nav__logo,
+body:not(.dark-theme).evening .nav__logo {
+    text-shadow: 0 2px 8px rgba(38,99,235,0.10);
 }
 
 .nav__menu {
@@ -937,6 +946,10 @@ body.dark-theme #modal-page1 .modal__body {
   border-radius: 1.2em;
   box-shadow: 0 2px 12px rgba(38,99,235,0.07);
   overflow: hidden;
+  transition: background 0.4s;
+}
+body.dark-theme #modal-page2 #cat-photo-container {
+  background: #181c24;
 }
 #modal-page2 #cat-photo-container img {
   max-width: 100%;
@@ -1017,8 +1030,8 @@ body.dark-theme #modal-page1 .modal__body {
   --color-footer-text: #222;
   --color-btn-bg: linear-gradient(90deg, #667eea 0%, #2563eb 100%);
   --color-btn-bg-hover: linear-gradient(90deg, #2563eb 0%, #667eea 100%);
-  --color-modal-shadow: 0 4px 16px rgba(38,99,235,0.07), 0 1.5px 8px rgba(0,0,0,0.04);
-  --color-card-shadow: 0 2px 8px rgba(38,99,235,0.05);
+  --color-modal-shadow: 0 1px 4px rgba(38,99,235,0.005), 0 1.5px 8px rgba(0,0,0,0.01);
+  --color-card-shadow: 0 1px 2px rgba(38,99,235,0.005);
 }
 body.dark-theme {
   --color-bg: #101114;
@@ -1032,8 +1045,8 @@ body.dark-theme {
   --color-footer-text: #fff;
   --color-btn-bg: linear-gradient(90deg, #23242a 0%, #3a4252 100%);
   --color-btn-bg-hover: linear-gradient(90deg, #3a4252 0%, #23242a 100%);
-  --color-modal-shadow: 0 2px 8px rgba(38,99,235,0.05), 0 1.5px 8px rgba(0,0,0,0.10);
-  --color-card-shadow: 0 1px 4px rgba(38,99,235,0.04);
+  --color-modal-shadow: 0 1px 4px rgba(38,99,235,0.01), 0 1.5px 8px rgba(0,0,0,0.02);
+  --color-card-shadow: 0 1px 2px rgba(38,99,235,0.005);
 }
 body.dark-theme, body.dark-theme * {
   color: #fff !important;
@@ -1142,12 +1155,12 @@ body.theme-anim {
   filter: blur(1.5px) grayscale(0.2);
 }
 body.dark-theme .big-modal .modal__content:hover {
-  box-shadow: 0 4px 32px 4px rgba(255,255,255,0.18), 0 2px 16px 2px rgba(255,255,255,0.08), var(--color-modal-shadow) !important;
+  box-shadow: 0 4px 20px 4px rgba(255,255,255,0.05), 0 2px 12px 2px rgba(255,255,255,0.03), var(--color-modal-shadow) !important;
   transition: box-shadow 0.3s cubic-bezier(.4,2,.6,1);
 }
 body.dark-theme .big-modal-btn:hover,
 body.dark-theme #modal-page2 #show-cat-btn:hover {
-  box-shadow: 0 2px 16px 2px rgba(255,255,255,0.18), 0 2px 8px rgba(38,99,235,0.05);
+  box-shadow: 0 2px 12px 2px rgba(255,255,255,0.05), 0 2px 8px rgba(38,99,235,0.01);
   background: var(--color-btn-bg-hover);
   color: #fff;
   transition: box-shadow 0.3s cubic-bezier(.4,2,.6,1), background 0.3s;
