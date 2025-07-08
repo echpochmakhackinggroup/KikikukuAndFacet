@@ -828,13 +828,16 @@ setInterval(setHeroBackgroundByTime, 60000);
     });
 })();
 
-// --- Эффект отражения для плит при движении мышки ---
+// --- Эффект отражения для плит при движении мышки или гироскопа ---
 (function setupReflectionEffect() {
     const toggle = document.getElementById('reflection-toggle');
+    const gyroBtn = document.getElementById('get-orientation');
     if (!toggle) return;
     let enabled = false;
     let rafId = null;
     let isMobile = /Mobi|Android/i.test(navigator.userAgent);
+    let gyroActive = false;
+    let lastGyro = {beta: 0, gamma: 0};
     const cards = () => Array.from(document.querySelectorAll('.service__card, .stat'));
 
     // Возвращает минимальное расстояние от мышки до пересечения с другой плитой (или Infinity)
@@ -898,6 +901,18 @@ setInterval(setHeroBackgroundByTime, 60000);
         card.style.removeProperty('--reflection-angle');
         card.style.removeProperty('--reflection-brightness');
     }
+    function setReflectionGyro(card, beta, gamma) {
+        // beta: -180..180 (наклон вперёд-назад), gamma: -90..90 (наклон влево-вправо)
+        // Преобразуем в угол блика: 0deg = свет сверху, 90deg = справа, 180deg = снизу, 270deg = слева
+        // Для эффекта: угол = 90 + gamma (лево-право), яркость = зависит от beta (наклон вперёд)
+        const angle = 90 + gamma;
+        // Яркость: при beta=0 (горизонтально) — максимум, при beta=±90 — минимум
+        let brightness = 1 - Math.abs(beta)/120;
+        brightness = Math.max(0.15, Math.min(1, brightness));
+        card.style.setProperty('--reflection-angle', `${angle}deg`);
+        card.style.setProperty('--reflection-brightness', brightness.toFixed(2));
+        card.classList.add('with-reflection');
+    }
     function onMouseMove(e) {
         const mouseX = e.clientX;
         const mouseY = e.clientY;
@@ -907,36 +922,39 @@ setInterval(setHeroBackgroundByTime, 60000);
             all.forEach(card => setReflection(card, mouseX, mouseY, all));
         });
     }
-    let lastBeta = 0, lastGamma = 0;
-    function onDeviceOrientation(event) {
-        // gamma: -90 (лево) ... 0 ... 90 (право)
-        // beta: -180 (вниз) ... 0 ... 180 (вверх)
-        lastBeta = event.beta || 0;
-        lastGamma = event.gamma || 0;
-        // Преобразуем угол в координаты относительно центра экрана
-        const w = window.innerWidth, h = window.innerHeight;
-        // Центрируем диапазон: gamma [-45,45], beta [0,180]
-        const mouseX = w/2 + (lastGamma/45) * (w/2);
-        const mouseY = h/2 + (lastBeta-90)/90 * (h/2);
-        const all = cards();
-        if (rafId) cancelAnimationFrame(rafId);
-        rafId = requestAnimationFrame(() => {
-            all.forEach(card => setReflection(card, mouseX, mouseY, all));
-        });
+    function onGyro(e) {
+        lastGyro = {beta: e.beta, gamma: e.gamma};
+        cards().forEach(card => setReflectionGyro(card, e.beta, e.gamma));
+    }
+    function enableGyro() {
+        if (gyroActive) return;
+        window.addEventListener('deviceorientation', onGyro);
+        gyroActive = true;
+    }
+    function disableGyro() {
+        if (!gyroActive) return;
+        window.removeEventListener('deviceorientation', onGyro);
+        gyroActive = false;
     }
     function enable() {
         enabled = true;
-        if (isMobile && window.DeviceOrientationEvent) {
-            window.addEventListener('deviceorientation', onDeviceOrientation, true);
+        if (isMobile) {
+            if (typeof DeviceOrientationEvent !== 'undefined' && DeviceOrientationEvent.requestPermission) {
+                gyroBtn.style.display = '';
+            } else {
+                // Автоматически, если не требуется разрешение
+                enableGyro();
+            }
         } else {
             window.addEventListener('mousemove', onMouseMove);
+            cards().forEach(card => card.classList.add('with-reflection'));
         }
-        cards().forEach(card => card.classList.add('with-reflection'));
     }
     function disable() {
         enabled = false;
-        if (isMobile && window.DeviceOrientationEvent) {
-            window.removeEventListener('deviceorientation', onDeviceOrientation, true);
+        if (isMobile) {
+            disableGyro();
+            gyroBtn.style.display = 'none';
         } else {
             window.removeEventListener('mousemove', onMouseMove);
         }
@@ -946,5 +964,23 @@ setInterval(setHeroBackgroundByTime, 60000);
         if (toggle.checked) enable();
         else disable();
     });
-    // На мобильных теперь поддерживаем deviceorientation
+    if (isMobile && gyroBtn) {
+        gyroBtn.onclick = async function() {
+            if (!window.DeviceOrientationEvent || !DeviceOrientationEvent.requestPermission) {
+                alert('Ваше устройство не поддерживает DeviceOrientationEvent');
+                return;
+            }
+            let permission = await DeviceOrientationEvent.requestPermission();
+            if (permission !== 'granted') {
+                alert('Вы должны разрешить доступ к сенсору устройства');
+                return;
+            }
+            enableGyro();
+            gyroBtn.style.display = 'none';
+        };
+    }
+    // Если мобильное — не отключаем переключатель, а показываем кнопку
+    if (isMobile && gyroBtn) {
+        gyroBtn.style.display = 'none';
+    }
 })(); 
