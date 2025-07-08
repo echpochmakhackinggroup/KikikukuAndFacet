@@ -906,23 +906,13 @@ setInterval(setHeroBackgroundByTime, 60000);
         // Ориентация: портрет или ландшафт
         let orientation = (Math.abs(beta) > Math.abs(gamma)) ? 'portrait' : 'landscape';
         let angle, brightness;
-        // --- Новая модель: малый наклон = большое смещение блика ---
-        // Усиливаем эффект "рычага" и добавляем нелинейность
-        const mirrorAmplify = 3.0; // коэффициент усиления
-        function nonlinear(val, max) {
-            // Ограничим диапазон, чтобы не было резких скачков
-            const clamped = Math.max(-max, Math.min(max, val));
-            // Тангенс для малых углов даёт сильный прирост, но ограничим максимум
-            return Math.tan(clamped * Math.PI / 180) * mirrorAmplify * 20; // 20 — масштаб
-        }
         if (orientation === 'portrait') {
-            // gamma — наклон "влево-вправо" (от -90 до 90)
-            // alpha — вращение вокруг оси
-            angle = 90 + nonlinear(gamma, 45) + alpha/2;
+            // В портретной: угол блика зависит от gamma (лево-право) и alpha (вращение)
+            angle = 90 + gamma + alpha/2;
             brightness = 1 - Math.abs(beta)/120;
         } else {
-            // beta — наклон "вверх-вниз" (от -180 до 180)
-            angle = 90 + nonlinear(beta, 45) + alpha/2;
+            // В ландшафтной: угол блика зависит от beta (вверх-вниз) и alpha
+            angle = 90 + beta + alpha/2;
             brightness = 1 - Math.abs(gamma)/90;
         }
         brightness = Math.max(0.15, Math.min(1, brightness));
