@@ -210,55 +210,26 @@
 
     <!-- Кнопки для открытия модальных страниц -->
     <div class="container" style="text-align:center; margin-bottom: 40px;">
-        <button class="big-modal-btn" data-modal="page1">Страница 1</button>
-        <button class="big-modal-btn" data-modal="page2">Страница 2</button>
-        <button class="big-modal-btn" data-modal="page3">Страница 3</button>
+        <button class="big-modal-btn" data-modal="experimental">Экспериментальные функции</button>
     </div>
 
-    <!-- Большие модальные окна-страницы -->
-    <div id="modal-page1" class="modal big-modal">
+    <!-- Модальное окно экспериментальных функций -->
+    <div id="modal-experimental" class="modal big-modal">
         <div class="modal__content">
             <span class="modal__close">&times;</span>
             <div class="modal__header">
-                <div class="modal__icon"></div>
-                <p class="desktop-only" style="color:#888;font-size:0.95em;">Прокручивай содержимое окна — видео будет перематываться в зависимости от скролла!</p>
-                <p class="mobile-only" style="color:#888;font-size:0.95em;display:none;">Скроллинг видео работает только на компьютерах.</p>
-            </div>
-            <div class="modal__body" style="width:100%;max-width:700px;margin:0 auto;overflow-y:auto;max-height:70vh;">
-                <h3><code></code></h3>
-                
-                <section style="margin:1.5em 0;">
-                    <video preload muted playsinline class="video-container" id="video-1" crossorigin="anonymous" style="width:100%;max-width:600px;border-radius:12px;box-shadow:0 4px 24px rgba(38,99,235,0.10);">
-                        <source src="IMG_1147.MP4" type="video/mp4" />
-                        
-                    </video>
-                </section>
-                <div style="height: 1000px;"></div>
-               
-            </div>
-        </div>
-    </div>
-    <div id="modal-page2" class="modal big-modal">
-        <div class="modal__content">
-            <span class="modal__close">&times;</span>
-            <div class="modal__header">
-                <h3>Случайный кот</h3>
-            </div>
-            <div class="modal__body cat-modal-body">
-                <button id="show-cat-btn">Показать кота</button>
-                <div id="cat-photo-container"></div>
-            </div>
-        </div>
-    </div>
-    <div id="modal-page3" class="modal big-modal">
-        <div class="modal__content">
-            <span class="modal__close">&times;</span>
-            <div class="modal__header">
-
-                <h2>Страница 3</h2>
+                <h2>Экспериментальные функции</h2>
             </div>
             <div class="modal__body">
-                <p>тут тоже пусто(</p>
+                <div style="margin:2em 0;display:flex;align-items:center;gap:1em;justify-content:center;">
+                    <label for="reflection-toggle" style="font-size:1.1em;cursor:pointer;user-select:none;">Отражения</label>
+                    <label class="switch">
+                      <input type="checkbox" id="reflection-toggle">
+                      <span class="slider"></span>
+                    </label>
+                </div>
+                <p>стеклянные плиты будут переливаться и отражаться при помощи гироскопа или мышки</p>
+                
             </div>
         </div>
     </div>

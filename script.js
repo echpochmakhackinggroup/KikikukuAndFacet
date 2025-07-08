@@ -787,16 +787,174 @@ setInterval(setHeroBackgroundByTime, 60000);
         const hour = new Date().getHours();
         const body = document.body;
         body.classList.remove('morning', 'day', 'evening', 'night');
+        let reflectionColor = 'white';
         if (hour >= 6 && hour < 11) {
             body.classList.add('morning');
-        } else if (hour >= 11 && hour < 18) {
+            reflectionColor = 'orange';
+        } else if (hour >= 11 && hour < 16) {
             body.classList.add('day');
-        } else if (hour >= 18 && hour < 22) {
+            reflectionColor = 'blue';
+        } else if (hour >= 16 && hour < 21) {
             body.classList.add('evening');
+            reflectionColor = 'orange';
         } else {
             body.classList.add('night');
+            reflectionColor = 'white';
         }
+        if (body.classList.contains('dark-theme')) {
+            reflectionColor = 'white';
+        }
+        body.setAttribute('data-reflection-color', reflectionColor);
     }
     updateTimeClass();
     setInterval(updateTimeClass, 60 * 1000);
+})();
+
+// --- Экспериментальные функции: модалка ---
+(function setupExperimentalModal() {
+    const btn = document.querySelector('.big-modal-btn[data-modal="experimental"]');
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+        const modal = document.getElementById('modal-experimental');
+        if (modal) {
+            modal.style.display = 'flex';
+            gsap.fromTo(modal, { opacity: 0 }, { opacity: 1, duration: 0.4, ease: 'power3.out' });
+            gsap.fromTo(modal.querySelector('.modal__content'),
+                { scale: 0.95, opacity: 0, y: 40 },
+                { scale: 1, opacity: 1, y: 0, duration: 0.5, ease: 'back.out(1.2)', delay: 0.1 }
+            );
+            document.body.style.overflow = 'hidden';
+        }
+    });
+})();
+
+// --- Эффект отражения для плит при движении мышки или наклоне (гироскоп) ---
+(function setupReflectionEffect() {
+    const toggle = document.getElementById('reflection-toggle');
+    if (!toggle) return;
+    let enabled = false;
+    let rafId = null;
+    let gyroscope = null;
+    let gyroX = 0, gyroY = 0;
+    const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+    const cards = () => Array.from(document.querySelectorAll('.service__card, .stat'));
+
+    // Возвращает минимальное расстояние от мышки до пересечения с другой плитой (или Infinity)
+    function obstructionDistance(card, mouseX, mouseY, allCards) {
+        const rectA = card.getBoundingClientRect();
+        const cx = rectA.left + rectA.width/2;
+        const cy = rectA.top + rectA.height/2;
+        let minDist = Infinity;
+        for (const other of allCards) {
+            if (other === card) continue;
+            const rectB = other.getBoundingClientRect();
+            const lines = [
+                [rectB.left, rectB.top, rectB.right, rectB.top],
+                [rectB.right, rectB.top, rectB.right, rectB.bottom],
+                [rectB.right, rectB.bottom, rectB.left, rectB.bottom],
+                [rectB.left, rectB.bottom, rectB.left, rectB.top]
+            ];
+            for (const [x1, y1, x2, y2] of lines) {
+                const pt = segmentIntersection(mouseX, mouseY, cx, cy, x1, y1, x2, y2);
+                if (pt) {
+                    const dist = Math.hypot(pt.x - mouseX, pt.y - mouseY);
+                    if (dist < minDist) minDist = dist;
+                }
+            }
+        }
+        return minDist;
+    }
+    // Возвращает точку пересечения двух отрезков или null
+    function segmentIntersection(x1, y1, x2, y2, x3, y3, x4, y4) {
+        const denom = (x1-x2)*(y3-y4)-(y1-y2)*(x3-x4);
+        if (denom === 0) return null;
+        const px = ((x1*y2-y1*x2)*(x3-x4)-(x1-x2)*(x3*y4-y3*x4))/denom;
+        const py = ((x1*y2-y1*x2)*(y3-y4)-(y1-y2)*(x3*y4-y3*x4))/denom;
+        // Проверяем, что точка лежит на обоих отрезках
+        function onSegment(xa,ya,xb,yb,xp,yp) {
+            return Math.min(xa,xb)-0.5<=xp && xp<=Math.max(xa,xb)+0.5 && Math.min(ya,yb)-0.5<=yp && yp<=Math.max(ya,yb)+0.5;
+        }
+        if (onSegment(x1,y1,x2,y2,px,py) && onSegment(x3,y3,x4,y4,px,py)) return {x:px,y:py};
+        return null;
+    }
+    function setReflection(card, mouseX, mouseY, allCards) {
+        const rect = card.getBoundingClientRect();
+        const cx = rect.left + rect.width/2;
+        const cy = rect.top + rect.height/2;
+        const dx = mouseX - cx;
+        const dy = mouseY - cy;
+        const angle = Math.atan2(dy, dx) * 180 / Math.PI + 180;
+        // Яркость блика: если нет перекрытия — 1, если есть — плавно убывает с расстоянием
+        let brightness = 1;
+        const minDist = obstructionDistance(card, mouseX, mouseY, allCards);
+        if (minDist !== Infinity) {
+            // Чем ближе перекрытие — тем слабее (0.1...0.7)
+            brightness = Math.max(0.1, Math.min(0.7, minDist/200));
+        }
+        card.style.setProperty('--reflection-angle', `${angle}deg`);
+        card.style.setProperty('--reflection-brightness', brightness.toFixed(2));
+        card.classList.add('with-reflection');
+    }
+    function clearReflection(card) {
+        card.classList.remove('with-reflection');
+        card.style.removeProperty('--reflection-angle');
+        card.style.removeProperty('--reflection-brightness');
+    }
+    function onMouseMove(e) {
+        const mouseX = e.clientX;
+        const mouseY = e.clientY;
+        const all = cards();
+        if (rafId) cancelAnimationFrame(rafId);
+        rafId = requestAnimationFrame(() => {
+            all.forEach(card => setReflection(card, mouseX, mouseY, all));
+        });
+    }
+    function onGyro() {
+        // gyroX, gyroY обновляются в обработчике гироскопа
+        // Преобразуем значения в виртуальную точку "света" на экране
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        // Чем сильнее наклон, тем дальше точка
+        const mouseX = w/2 + gyroY * w * 0.7;
+        const mouseY = h/2 + gyroX * h * 0.7;
+        const all = cards();
+        if (rafId) cancelAnimationFrame(rafId);
+        rafId = requestAnimationFrame(() => {
+            all.forEach(card => setReflection(card, mouseX, mouseY, all));
+        });
+    }
+    function enable() {
+        enabled = true;
+        if (isMobile && 'Gyroscope' in window) {
+            try {
+                gyroscope = new Gyroscope({ frequency: 30 });
+                gyroscope.addEventListener('reading', () => {
+                    gyroX = gyroscope.x;
+                    gyroY = gyroscope.y;
+                    onGyro();
+                });
+                gyroscope.start();
+            } catch (e) {
+                // Гироскоп не поддерживается
+                gyroscope = null;
+            }
+        } else {
+            window.addEventListener('mousemove', onMouseMove);
+        }
+        cards().forEach(card => card.classList.add('with-reflection'));
+    }
+    function disable() {
+        enabled = false;
+        if (isMobile && gyroscope) {
+            gyroscope.stop();
+            gyroscope = null;
+        }
+        window.removeEventListener('mousemove', onMouseMove);
+        cards().forEach(clearReflection);
+    }
+    toggle.addEventListener('change', () => {
+        if (toggle.checked) enable();
+        else disable();
+    });
+    // На мобильных теперь не отключаем, а используем гироскоп
 })(); 
