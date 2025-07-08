@@ -834,9 +834,8 @@ setInterval(setHeroBackgroundByTime, 60000);
     if (!toggle) return;
     let enabled = false;
     let rafId = null;
-    const cards = () => Array.from(document.querySelectorAll('.service__card, .stat'));
     let isMobile = /Mobi|Android/i.test(navigator.userAgent);
-    let orientationHandler = null;
+    const cards = () => Array.from(document.querySelectorAll('.service__card, .stat'));
 
     // Возвращает минимальное расстояние от мышки до пересечения с другой плитой (или Infinity)
     function obstructionDistance(card, mouseX, mouseY, allCards) {
@@ -908,27 +907,27 @@ setInterval(setHeroBackgroundByTime, 60000);
             all.forEach(card => setReflection(card, mouseX, mouseY, all));
         });
     }
-    function setReflectionGyro(card, beta, gamma, allCards) {
-        // beta: -180 (наклон назад) ... 0 (горизонт) ... 180 (наклон вперёд)
-        // gamma: -90 (влево) ... 0 ... 90 (вправо)
-        // Преобразуем в угол блика
-        const angle = Math.atan2(beta, gamma) * 180 / Math.PI + 180;
-        // Яркость всегда 1 на мобильных (можно доработать для перекрытий)
-        card.style.setProperty('--reflection-angle', `${angle}deg`);
-        card.style.setProperty('--reflection-brightness', '1');
-        card.classList.add('with-reflection');
-    }
+    let lastBeta = 0, lastGamma = 0;
     function onDeviceOrientation(event) {
-        const beta = event.beta || 0;
-        const gamma = event.gamma || 0;
+        // gamma: -90 (лево) ... 0 ... 90 (право)
+        // beta: -180 (вниз) ... 0 ... 180 (вверх)
+        lastBeta = event.beta || 0;
+        lastGamma = event.gamma || 0;
+        // Преобразуем угол в координаты относительно центра экрана
+        const w = window.innerWidth, h = window.innerHeight;
+        // Центрируем диапазон: gamma [-45,45], beta [0,180]
+        const mouseX = w/2 + (lastGamma/45) * (w/2);
+        const mouseY = h/2 + (lastBeta-90)/90 * (h/2);
         const all = cards();
-        all.forEach(card => setReflectionGyro(card, beta, gamma, all));
+        if (rafId) cancelAnimationFrame(rafId);
+        rafId = requestAnimationFrame(() => {
+            all.forEach(card => setReflection(card, mouseX, mouseY, all));
+        });
     }
     function enable() {
         enabled = true;
         if (isMobile && window.DeviceOrientationEvent) {
-            orientationHandler = onDeviceOrientation;
-            window.addEventListener('deviceorientation', orientationHandler, true);
+            window.addEventListener('deviceorientation', onDeviceOrientation, true);
         } else {
             window.addEventListener('mousemove', onMouseMove);
         }
@@ -936,9 +935,8 @@ setInterval(setHeroBackgroundByTime, 60000);
     }
     function disable() {
         enabled = false;
-        if (isMobile && window.DeviceOrientationEvent && orientationHandler) {
-            window.removeEventListener('deviceorientation', orientationHandler, true);
-            orientationHandler = null;
+        if (isMobile && window.DeviceOrientationEvent) {
+            window.removeEventListener('deviceorientation', onDeviceOrientation, true);
         } else {
             window.removeEventListener('mousemove', onMouseMove);
         }
@@ -948,9 +946,5 @@ setInterval(setHeroBackgroundByTime, 60000);
         if (toggle.checked) enable();
         else disable();
     });
-    // Если мобильное — разрешаем только гироскоп
-    if (isMobile) {
-        disable(); // сброс на старте
-        toggle.disabled = false;
-    }
+    // На мобильных теперь поддерживаем deviceorientation
 })(); 
