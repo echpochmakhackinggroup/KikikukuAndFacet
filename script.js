@@ -906,21 +906,18 @@ setInterval(setHeroBackgroundByTime, 60000);
         // 1. Лампочка висит над центром сайта (центрального .container)
         // 2. Для каждой карточки отражение индивидуально
 
-        // Находим центральный .container (берём самый широкий)
         let containers = Array.from(document.querySelectorAll('.container'));
         let mainContainer = containers.reduce((max, c) => (c.offsetWidth > (max?.offsetWidth||0) ? c : max), containers[0]);
         let contRect = mainContainer.getBoundingClientRect();
-        // Центр контейнера в координатах страницы
         let contCenter = {
             x: contRect.left + contRect.width/2 + window.scrollX,
             y: contRect.top + contRect.height/2 + window.scrollY,
             z: 0
         };
         // Параметры лампочки
-        const lampHeight = 800; // px над сайтом
+        const lampHeight = 350; // было 800, теперь ниже
         const lampPos = { x: contCenter.x, y: contCenter.y, z: lampHeight };
 
-        // --- 1. Нормаль экрана из углов ---
         const toRad = deg => deg * Math.PI / 180;
         const b = toRad(beta || 0);
         const g = toRad(gamma || 0);
@@ -932,11 +929,8 @@ setInterval(setHeroBackgroundByTime, 60000);
         const norm = Math.hypot(n[0], n[1], n[2]);
         n = n.map(x => x / norm);
 
-        // --- 2. Для каждой карточки ---
         const rect = card.getBoundingClientRect();
-        // Центр карточки в координатах страницы
         const cardCenter = { x: rect.left + rect.width/2 + window.scrollX, y: rect.top + rect.height/2 + window.scrollY, z: 0 };
-        // Вектор от центра карточки к лампочке
         const toLamp = {
             x: lampPos.x - cardCenter.x,
             y: lampPos.y - cardCenter.y,
@@ -945,22 +939,25 @@ setInterval(setHeroBackgroundByTime, 60000);
         const toLampNorm = Math.hypot(toLamp.x, toLamp.y, toLamp.z);
         const L = { x: toLamp.x/toLampNorm, y: toLamp.y/toLampNorm, z: toLamp.z/toLampNorm };
 
-        // --- 3. Вектор отражения (R = 2(N·L)N - L) ---
         const dot = n[0]*L.x + n[1]*L.y + n[2]*L.z;
         const R = {
             x: 2*dot*n[0] - L.x,
             y: 2*dot*n[1] - L.y,
             z: 2*dot*n[2] - L.z
         };
-        // --- 4. Где отражённый луч пересекает экран (z=0)? ---
         const t = -cardCenter.z / R.z;
-        const hit = {
+        let hit = {
             x: cardCenter.x + R.x * t,
             y: cardCenter.y + R.y * t
         };
         // --- 5. Переводим hit.x/hit.y в проценты внутри карточки ---
-        const relX = (hit.x - (rect.left + window.scrollX)) / rect.width;
-        const relY = (hit.y - (rect.top + window.scrollY)) / rect.height;
+        let relX = (hit.x - (rect.left + window.scrollX)) / rect.width;
+        let relY = (hit.y - (rect.top + window.scrollY)) / rect.height;
+        // Fallback: если блик вне карточки, ставим по центру
+        if (relX < 0 || relX > 1 || relY < 0 || relY > 1 || isNaN(relX) || isNaN(relY)) {
+            relX = 0.5;
+            relY = 0.1;
+        }
         const px = Math.max(0, Math.min(1, relX));
         const py = Math.max(0, Math.min(1, relY));
         if (!card._refl) card._refl = {x: 0.5, y: 0.1};
@@ -969,6 +966,8 @@ setInterval(setHeroBackgroundByTime, 60000);
         card.style.setProperty('--reflection-x', (card._refl.x*100).toFixed(1)+'%');
         card.style.setProperty('--reflection-y', (card._refl.y*100).toFixed(1)+'%');
         card.classList.add('with-reflection');
+        // Для отладки:
+        // console.log('card', card, 'refl', card._refl.x, card._refl.y, 'rel', relX, relY);
     }
     function onMouseMove(e) {
         const mouseX = e.clientX;

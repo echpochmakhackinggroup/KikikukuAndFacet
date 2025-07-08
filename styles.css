@@ -288,15 +288,13 @@ section {
     z-index: 2;
     /* Новый яркий блик */
     background:
-        radial-gradient(circle at var(--reflection-x,50%) var(--reflection-y,10%), rgba(255,255,255,0.32) 0%, rgba(255,255,255,0.10) 30%, rgba(255,255,255,0.00) 60%),
+        radial-gradient(circle at var(--reflection-x,50%) var(--reflection-y,10%), rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.18) 40%, rgba(255,255,255,0.00) 75%),
         linear-gradient(var(--reflection-angle, 120deg), var(--reflection-main) 0%, var(--reflection-mid) 55%, rgba(255,255,255,0.00) 90%),
-        /* Луч света */
         linear-gradient(var(--reflection-angle, 120deg), var(--reflection-ray) 20%, rgba(255,255,255,0.00) 80%),
-        /* Цветной отблеск */
         linear-gradient(var(--reflection-angle, 120deg), var(--reflection-color) 0%, rgba(255,255,255,0.00) 95%);
-    opacity: var(--reflection-brightness, 0.85);
-    filter: blur(1.2px) saturate(1.08) brightness(calc(0.7 + 0.6 * var(--reflection-brightness, 1)));
-    box-shadow: 0 0 32px 0 rgba(255,255,255,0.06) inset;
+    opacity: var(--reflection-brightness, 0.95);
+    filter: blur(1.2px) saturate(1.08) brightness(calc(0.8 + 0.7 * var(--reflection-brightness, 1)));
+    box-shadow: 0 0 32px 0 rgba(255,255,255,0.09) inset;
     transition: background 0.5s cubic-bezier(.4,2,.6,1), opacity 0.3s, filter 0.3s;
     background-repeat: no-repeat;
 }
