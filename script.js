@@ -925,16 +925,29 @@ setInterval(setHeroBackgroundByTime, 60000);
     function onGyro(e) {
         lastGyro = {beta: e.beta, gamma: e.gamma};
         cards().forEach(card => setReflectionGyro(card, e.beta, e.gamma));
+        // Выводим значения в #gyro-info
+        const info = document.getElementById('gyro-info');
+        if (info) {
+            info.style.display = '';
+            document.getElementById('alpha').textContent = e.alpha ? e.alpha.toFixed(1) + '°' : '–';
+            document.getElementById('beta').textContent = e.beta ? e.beta.toFixed(1) + '°' : '–';
+            document.getElementById('gamma').textContent = e.gamma ? e.gamma.toFixed(1) + '°' : '–';
+            document.getElementById('orientation').textContent = (Math.abs(e.beta) > Math.abs(e.gamma)) ? 'portrait' : 'landscape';
+        }
     }
     function enableGyro() {
         if (gyroActive) return;
         window.addEventListener('deviceorientation', onGyro);
         gyroActive = true;
+        const info = document.getElementById('gyro-info');
+        if (info) info.style.display = '';
     }
     function disableGyro() {
         if (!gyroActive) return;
         window.removeEventListener('deviceorientation', onGyro);
         gyroActive = false;
+        const info = document.getElementById('gyro-info');
+        if (info) info.style.display = 'none';
     }
     function enable() {
         enabled = true;
