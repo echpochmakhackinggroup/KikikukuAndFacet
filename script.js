@@ -828,16 +828,15 @@ setInterval(setHeroBackgroundByTime, 60000);
     });
 })();
 
-// --- Эффект отражения для плит при движении мышки или наклоне (гироскоп) ---
+// --- Эффект отражения для плит при движении мышки ---
 (function setupReflectionEffect() {
     const toggle = document.getElementById('reflection-toggle');
     if (!toggle) return;
     let enabled = false;
     let rafId = null;
-    let gyroscope = null;
-    let gyroX = 0, gyroY = 0;
-    const isMobile = /Mobi|Android/i.test(navigator.userAgent);
     const cards = () => Array.from(document.querySelectorAll('.service__card, .stat'));
+    let isMobile = /Mobi|Android/i.test(navigator.userAgent);
+    let orientationHandler = null;
 
     // Возвращает минимальное расстояние от мышки до пересечения с другой плитой (или Infinity)
     function obstructionDistance(card, mouseX, mouseY, allCards) {
@@ -909,35 +908,27 @@ setInterval(setHeroBackgroundByTime, 60000);
             all.forEach(card => setReflection(card, mouseX, mouseY, all));
         });
     }
-    function onGyro() {
-        // gyroX, gyroY обновляются в обработчике гироскопа
-        // Преобразуем значения в виртуальную точку "света" на экране
-        const w = window.innerWidth;
-        const h = window.innerHeight;
-        // Чем сильнее наклон, тем дальше точка
-        const mouseX = w/2 + gyroY * w * 0.7;
-        const mouseY = h/2 + gyroX * h * 0.7;
+    function setReflectionGyro(card, beta, gamma, allCards) {
+        // beta: -180 (наклон назад) ... 0 (горизонт) ... 180 (наклон вперёд)
+        // gamma: -90 (влево) ... 0 ... 90 (вправо)
+        // Преобразуем в угол блика
+        const angle = Math.atan2(beta, gamma) * 180 / Math.PI + 180;
+        // Яркость всегда 1 на мобильных (можно доработать для перекрытий)
+        card.style.setProperty('--reflection-angle', `${angle}deg`);
+        card.style.setProperty('--reflection-brightness', '1');
+        card.classList.add('with-reflection');
+    }
+    function onDeviceOrientation(event) {
+        const beta = event.beta || 0;
+        const gamma = event.gamma || 0;
         const all = cards();
-        if (rafId) cancelAnimationFrame(rafId);
-        rafId = requestAnimationFrame(() => {
-            all.forEach(card => setReflection(card, mouseX, mouseY, all));
-        });
+        all.forEach(card => setReflectionGyro(card, beta, gamma, all));
     }
     function enable() {
         enabled = true;
-        if (isMobile && 'Gyroscope' in window) {
-            try {
-                gyroscope = new Gyroscope({ frequency: 30 });
-                gyroscope.addEventListener('reading', () => {
-                    gyroX = gyroscope.x;
-                    gyroY = gyroscope.y;
-                    onGyro();
-                });
-                gyroscope.start();
-            } catch (e) {
-                // Гироскоп не поддерживается
-                gyroscope = null;
-            }
+        if (isMobile && window.DeviceOrientationEvent) {
+            orientationHandler = onDeviceOrientation;
+            window.addEventListener('deviceorientation', orientationHandler, true);
         } else {
             window.addEventListener('mousemove', onMouseMove);
         }
@@ -945,16 +936,21 @@ setInterval(setHeroBackgroundByTime, 60000);
     }
     function disable() {
         enabled = false;
-        if (isMobile && gyroscope) {
-            gyroscope.stop();
-            gyroscope = null;
+        if (isMobile && window.DeviceOrientationEvent && orientationHandler) {
+            window.removeEventListener('deviceorientation', orientationHandler, true);
+            orientationHandler = null;
+        } else {
+            window.removeEventListener('mousemove', onMouseMove);
         }
-        window.removeEventListener('mousemove', onMouseMove);
         cards().forEach(clearReflection);
     }
     toggle.addEventListener('change', () => {
         if (toggle.checked) enable();
         else disable();
     });
-    // На мобильных теперь не отключаем, а используем гироскоп
+    // Если мобильное — разрешаем только гироскоп
+    if (isMobile) {
+        disable(); // сброс на старте
+        toggle.disabled = false;
+    }
 })(); 
