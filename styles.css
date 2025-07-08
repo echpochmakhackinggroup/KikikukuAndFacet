@@ -297,6 +297,11 @@ section {
     filter: blur(1.2px) saturate(1.08) brightness(calc(0.7 + 0.6 * var(--reflection-brightness, 1)));
     box-shadow: 0 0 32px 0 rgba(255,255,255,0.06) inset;
     transition: background 0.5s cubic-bezier(.4,2,.6,1), opacity 0.3s, filter 0.3s;
+    /* Новое: позиционируем блик по x/y */
+    --refl-x: var(--reflection-x, 50%);
+    --refl-y: var(--reflection-y, 10%);
+    background-position: var(--refl-x) var(--refl-y);
+    background-repeat: no-repeat;
 }
 
 /* Модальные окна */

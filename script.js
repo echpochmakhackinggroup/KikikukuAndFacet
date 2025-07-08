@@ -902,22 +902,81 @@ setInterval(setHeroBackgroundByTime, 60000);
         card.style.removeProperty('--reflection-brightness');
     }
     function setReflectionGyro(card, alpha, beta, gamma) {
-        // alpha: вращение вокруг Z (0-360), beta: X (-180..180), gamma: Y (-90..90)
-        // Ориентация: портрет или ландшафт
-        let orientation = (Math.abs(beta) > Math.abs(gamma)) ? 'portrait' : 'landscape';
-        let angle, brightness;
-        if (orientation === 'portrait') {
-            // В портретной: угол блика зависит от gamma (лево-право) и alpha (вращение)
-            angle = 90 + gamma + alpha/2;
-            brightness = 1 - Math.abs(beta)/120;
-        } else {
-            // В ландшафтной: угол блика зависит от beta (вверх-вниз) и alpha
-            angle = 90 + beta + alpha/2;
-            brightness = 1 - Math.abs(gamma)/90;
-        }
-        brightness = Math.max(0.15, Math.min(1, brightness));
-        card.style.setProperty('--reflection-angle', `${angle}deg`);
-        card.style.setProperty('--reflection-brightness', brightness.toFixed(2));
+        // --- Новая физика отражения ---
+        // 1. Лампочка висит над центром экрана (0,0,h)
+        // 2. Экран в плоскости z=0, нормаль вычисляем из beta/gamma/alpha
+        // 3. Для каждой карточки ищем, где на ней будет отражение
+        // 4. Переводим в проценты для CSS
+
+        // Параметры лампочки
+        const lampHeight = 800; // px над экраном (можно менять для эффекта)
+        // Центр экрана (в координатах окна)
+        const screenW = window.innerWidth;
+        const screenH = window.innerHeight;
+        const screenCenter = { x: screenW/2, y: screenH/2, z: 0 };
+        const lampPos = { x: screenW/2, y: screenH/2, z: lampHeight };
+
+        // --- 1. Нормаль экрана из углов ---
+        // beta: X (наклон вперёд-назад), gamma: Y (влево-вправо), alpha: вращение вокруг Z
+        // Переводим в радианы
+        const toRad = deg => deg * Math.PI / 180;
+        const b = toRad(beta || 0);
+        const g = toRad(gamma || 0);
+        const a = toRad(alpha || 0);
+        // Сначала наклоняем по X (beta), потом по Y (gamma), потом вращаем по Z (alpha)
+        let n = [0, 0, 1]; // нормаль экрана (по оси Z)
+        // Вращение по X (beta)
+        n = [n[0], Math.cos(b)*n[1] - Math.sin(b)*n[2], Math.sin(b)*n[1] + Math.cos(b)*n[2]];
+        // Вращение по Y (gamma)
+        n = [Math.cos(g)*n[0] + Math.sin(g)*n[2], n[1], -Math.sin(g)*n[0] + Math.cos(g)*n[2]];
+        // Вращение по Z (alpha)
+        n = [Math.cos(a)*n[0] - Math.sin(a)*n[1], Math.sin(a)*n[0] + Math.cos(a)*n[1], n[2]];
+        // Нормализуем
+        const norm = Math.hypot(n[0], n[1], n[2]);
+        n = n.map(x => x / norm);
+
+        // --- 2. Для каждой карточки ---
+        const rect = card.getBoundingClientRect();
+        // Центр карточки в координатах окна
+        const cardCenter = { x: rect.left + rect.width/2, y: rect.top + rect.height/2, z: 0 };
+        // Вектор от центра карточки к лампочке
+        const toLamp = {
+            x: lampPos.x - cardCenter.x,
+            y: lampPos.y - cardCenter.y,
+            z: lampPos.z - cardCenter.z
+        };
+        // Нормализуем
+        const toLampNorm = Math.hypot(toLamp.x, toLamp.y, toLamp.z);
+        const L = { x: toLamp.x/toLampNorm, y: toLamp.y/toLampNorm, z: toLamp.z/toLampNorm };
+
+        // --- 3. Вектор отражения (R = 2(N·L)N - L) ---
+        const dot = n[0]*L.x + n[1]*L.y + n[2]*L.z;
+        const R = {
+            x: 2*dot*n[0] - L.x,
+            y: 2*dot*n[1] - L.y,
+            z: 2*dot*n[2] - L.z
+        };
+        // --- 4. Где отражённый луч пересекает экран (z=0)? ---
+        // cardCenter — точка на экране, R — направление
+        // Ищем t: cardCenter.z + R.z * t = 0 => t = -cardCenter.z / R.z
+        const t = -cardCenter.z / R.z;
+        const hit = {
+            x: cardCenter.x + R.x * t,
+            y: cardCenter.y + R.y * t
+        };
+        // --- 5. Переводим hit.x/hit.y в проценты внутри карточки ---
+        const relX = (hit.x - rect.left) / rect.width;
+        const relY = (hit.y - rect.top) / rect.height;
+        // Ограничиваем в пределах 0..1
+        const px = Math.max(0, Math.min(1, relX));
+        const py = Math.max(0, Math.min(1, relY));
+        // Плавная анимация: интерполируем к новым значениям
+        if (!card._refl) card._refl = {x: 0.5, y: 0.1};
+        card._refl.x += (px - card._refl.x) * 0.15;
+        card._refl.y += (py - card._refl.y) * 0.15;
+        // Устанавливаем CSS-переменные для блика
+        card.style.setProperty('--reflection-x', (card._refl.x*100).toFixed(1)+'%');
+        card.style.setProperty('--reflection-y', (card._refl.y*100).toFixed(1)+'%');
         card.classList.add('with-reflection');
     }
     function onMouseMove(e) {
