@@ -1078,16 +1078,16 @@ body.dark-theme #modal-page2 #cat-photo-container {
   --reflection-color: rgba(38,99,235,0.06);
 }
 body[data-reflection-color="blue"] {
-  --reflection-main: rgba(220,235,255,0.13);
-  --reflection-mid: rgba(120,180,255,0.06);
-  --reflection-ray: rgba(38,99,235,0.07);
-  --reflection-color: rgba(38,99,235,0.07);
+  --reflection-main: rgba(120,180,255,0.10);
+  --reflection-mid: rgba(120,180,255,0.08);
+  --reflection-ray: rgba(38,99,235,0.09);
+  --reflection-color: rgba(38,99,235,0.09);
 }
 body[data-reflection-color="orange"] {
-  --reflection-main: rgba(255,240,200,0.22);
-  --reflection-mid: rgba(255,200,120,0.10);
-  --reflection-ray: rgba(255,180,38,0.13);
-  --reflection-color: rgba(255,180,38,0.13);
+  --reflection-main: rgba(255,200,120,0.22);
+  --reflection-mid: rgba(255,180,38,0.13);
+  --reflection-ray: rgba(255,180,38,0.18);
+  --reflection-color: rgba(255,180,38,0.18);
 }
 body[data-reflection-color="white"] {
   --reflection-main: rgba(255,255,255,0.22);
