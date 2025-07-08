@@ -901,13 +901,20 @@ setInterval(setHeroBackgroundByTime, 60000);
         card.style.removeProperty('--reflection-angle');
         card.style.removeProperty('--reflection-brightness');
     }
-    function setReflectionGyro(card, beta, gamma) {
-        // beta: -180..180 (наклон вперёд-назад), gamma: -90..90 (наклон влево-вправо)
-        // Преобразуем в угол блика: 0deg = свет сверху, 90deg = справа, 180deg = снизу, 270deg = слева
-        // Для эффекта: угол = 90 + gamma (лево-право), яркость = зависит от beta (наклон вперёд)
-        const angle = 90 + gamma;
-        // Яркость: при beta=0 (горизонтально) — максимум, при beta=±90 — минимум
-        let brightness = 1 - Math.abs(beta)/120;
+    function setReflectionGyro(card, alpha, beta, gamma) {
+        // alpha: вращение вокруг Z (0-360), beta: X (-180..180), gamma: Y (-90..90)
+        // Ориентация: портрет или ландшафт
+        let orientation = (Math.abs(beta) > Math.abs(gamma)) ? 'portrait' : 'landscape';
+        let angle, brightness;
+        if (orientation === 'portrait') {
+            // В портретной: угол блика зависит от gamma (лево-право) и alpha (вращение)
+            angle = 90 + gamma + alpha/2;
+            brightness = 1 - Math.abs(beta)/120;
+        } else {
+            // В ландшафтной: угол блика зависит от beta (вверх-вниз) и alpha
+            angle = 90 + beta + alpha/2;
+            brightness = 1 - Math.abs(gamma)/90;
+        }
         brightness = Math.max(0.15, Math.min(1, brightness));
         card.style.setProperty('--reflection-angle', `${angle}deg`);
         card.style.setProperty('--reflection-brightness', brightness.toFixed(2));
@@ -923,8 +930,8 @@ setInterval(setHeroBackgroundByTime, 60000);
         });
     }
     function onGyro(e) {
-        lastGyro = {beta: e.beta, gamma: e.gamma};
-        cards().forEach(card => setReflectionGyro(card, e.beta, e.gamma));
+        lastGyro = {beta: e.beta, gamma: e.gamma, alpha: e.alpha};
+        cards().forEach(card => setReflectionGyro(card, e.alpha, e.beta, e.gamma));
         // Выводим значения в #gyro-info
         const info = document.getElementById('gyro-info');
         if (info) {
