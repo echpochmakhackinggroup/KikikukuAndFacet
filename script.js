@@ -907,19 +907,17 @@ setInterval(setHeroBackgroundByTime, 60000);
         let orientation = (Math.abs(beta) > Math.abs(gamma)) ? 'portrait' : 'landscape';
         let angle, brightness;
         if (orientation === 'portrait') {
-            // В портретной: угол блика зависит от gamma (лево-право) и alpha (вращение)
-            angle = 90 + gamma + alpha/2;
+            // Блик зависит от всех трёх углов
+            angle = 90 + gamma + alpha + beta/2;
             brightness = 1 - Math.abs(beta)/120;
         } else {
-            // В ландшафтной: угол блика зависит от beta (вверх-вниз) и alpha
-            angle = 90 + beta + alpha/2;
+            angle = 90 + beta + alpha + gamma/2;
             brightness = 1 - Math.abs(gamma)/90;
         }
         brightness = Math.max(0.15, Math.min(1, brightness));
         card.style.setProperty('--reflection-angle', `${angle}deg`);
         card.style.setProperty('--reflection-brightness', brightness.toFixed(2));
         card.classList.add('with-reflection');
-        // Удаляем x/y для гироскопа, чтобы radial-блик не мешал
         card.style.removeProperty('--reflection-x');
         card.style.removeProperty('--reflection-y');
     }
