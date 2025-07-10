@@ -1299,16 +1299,12 @@ function positionImageMarkers() {
   const markerStart = container.querySelector('.image-marker--start');
   const markerEnd = container.querySelector('.image-marker--end');
   if (!img || !markerStart || !markerEnd) return;
-  // Только на десктопе и на экранах шире 400px
-  if (window.innerWidth < 400) {
+  // Только на десктопе
+  if (window.innerWidth < 768) {
     markerStart.style.left = '';
     markerEnd.style.left = '';
     markerStart.style.transform = '';
     markerEnd.style.transform = '';
-    markerStart.style.top = '';
-    markerStart.style.bottom = '';
-    markerEnd.style.top = '';
-    markerEnd.style.bottom = '';
     return;
   }
   // Получаем реальные размеры картинки
