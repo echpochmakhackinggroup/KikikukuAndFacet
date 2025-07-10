@@ -1128,9 +1128,23 @@ setInterval(setHeroBackgroundByTime, 60000);
     }
     function enable() {
         enabled = true;
+        document.body.classList.add('with-overlay-glass');
+        document.addEventListener('visibilitychange', onVisibilityChange);
         if (isMobile) {
+            // Если требуется разрешение — сразу запрашиваем
             if (typeof DeviceOrientationEvent !== 'undefined' && DeviceOrientationEvent.requestPermission) {
-                gyroBtn.style.display = '';
+                DeviceOrientationEvent.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        enableGyro();
+                        if (gyroBtn) gyroBtn.style.display = 'none';
+                    } else {
+                        alert('Для эффекта отражения нужно разрешить доступ к гироскопу.');
+                        if (gyroBtn) gyroBtn.style.display = '';
+                    }
+                }).catch(() => {
+                    alert('Не удалось получить доступ к гироскопу.');
+                    if (gyroBtn) gyroBtn.style.display = '';
+                });
             } else {
                 // Автоматически, если не требуется разрешение
                 enableGyro();
@@ -1139,8 +1153,6 @@ setInterval(setHeroBackgroundByTime, 60000);
             window.addEventListener('mousemove', onMouseMove);
             cards().forEach(card => card.classList.add('with-reflection'));
         }
-        document.body.classList.add('with-overlay-glass');
-        document.addEventListener('visibilitychange', onVisibilityChange);
     }
     function disable() {
         enabled = false;
