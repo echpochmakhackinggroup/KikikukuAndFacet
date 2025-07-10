@@ -942,6 +942,7 @@ setInterval(setHeroBackgroundByTime, 60000);
         const cy = rectA.top + rectA.height/2;
         let minDist = Infinity;
         let minDistText = Infinity;
+        let minDistWood = Infinity;
         if (!obstaclesCache) updateObstaclesCache();
         if (!spatialGrid) updateSpatialGrid();
         // Получаем только препятствия на пути луча
@@ -965,13 +966,15 @@ setInterval(setHeroBackgroundByTime, 60000);
                     const dist = Math.hypot(pt.x - mouseX, pt.y - mouseY);
                     if (obstaclesCache.cards.some(o => o.el === el)) {
                         if (dist < minDist) { minDist = dist; if (minDist < 5) break; }
+                    } else if (obstaclesCache.wood && obstaclesCache.wood.some(o => o.el === el)) {
+                        if (dist < minDistWood) { minDistWood = dist; if (minDistWood < 5) break; }
                     } else {
                         if (dist < minDistText) { minDistText = dist; if (minDistText < 5) break; }
                     }
                 }
             }
         }
-        return {minDist, minDistText};
+        return {minDist, minDistText, minDistWood};
     }
     // Возвращает точку пересечения двух отрезков или null
     function segmentIntersection(x1, y1, x2, y2, x3, y3, x4, y4) {
@@ -1004,10 +1007,13 @@ setInterval(setHeroBackgroundByTime, 60000);
         const angle = Math.atan2(dy, dx) * 180 / Math.PI + 180 + jitter;
         // Яркость блика: если нет перекрытия — 1, если есть — плавно убывает с расстоянием
         let brightness = 1;
-        const {minDist, minDistText} = obstructionDistance(card, mouseX, mouseY, allCards);
+        const {minDist, minDistText, minDistWood} = obstructionDistance(card, mouseX, mouseY, allCards);
         if (minDist !== Infinity) {
             // Чем ближе перекрытие плитой — тем слабее (0.1...0.7)
             brightness = Math.max(0.1, Math.min(0.7, minDist/200));
+        } else if (minDistWood !== Infinity) {
+            // Если только текст/иконка — ослабление слабее (0.3...0.85)
+            brightness = Math.max(0.18, Math.min(0.6, minDistWood/200));
         } else if (minDistText !== Infinity) {
             // Если только текст/иконка — ослабление слабее (0.3...0.85)
             brightness = Math.max(0.3, Math.min(0.85, minDistText/200));
@@ -1074,6 +1080,34 @@ setInterval(setHeroBackgroundByTime, 60000);
             overlay.style.setProperty('--overlay-reflection-brightness', brightness);
         });
     }
+    // === Wood reflection for images ===
+    function setWoodReflection(mouseX, mouseY) {
+        const images = document.querySelectorAll('.wood-reflection');
+        // Центр экрана
+        const cx = window.innerWidth / 2;
+        const cy = window.innerHeight / 2;
+        let dx = 0, dy = -1;
+        if (typeof mouseX === 'number' && typeof mouseY === 'number') {
+            dx = mouseX - cx;
+            dy = mouseY - cy;
+        }
+        const jitter = (Math.random()-0.5) * 5;
+        const angle = Math.round(Math.atan2(dy, dx) * 180 / Math.PI + 180 + jitter);
+        let brightness = 0.22;
+        images.forEach(img => {
+            img.classList.add('with-wood-reflection');
+            img.style.setProperty('--wood-reflection-angle', `${angle}deg`);
+            img.style.setProperty('--wood-reflection-brightness', brightness);
+        });
+    }
+    function clearWoodReflection() {
+        const images = document.querySelectorAll('.wood-reflection');
+        images.forEach(img => {
+            img.classList.remove('with-wood-reflection');
+            img.style.removeProperty('--wood-reflection-angle');
+            img.style.removeProperty('--wood-reflection-brightness');
+        });
+    }
     function onMouseMove(e) {
         const mouseX = e.clientX;
         const mouseY = e.clientY;
@@ -1082,6 +1116,7 @@ setInterval(setHeroBackgroundByTime, 60000);
         rafId = requestAnimationFrame(() => {
             all.forEach(card => setReflection(card, mouseX, mouseY, all));
             setOverlayGlass(mouseX, mouseY);
+            setWoodReflection(mouseX, mouseY);
         });
     }
     function onGyro(e) {
@@ -1089,19 +1124,26 @@ setInterval(setHeroBackgroundByTime, 60000);
         cards().forEach(card => setReflectionGyro(card, e.alpha, e.beta, e.gamma));
         // Для overlay-glass: угол блика зависит от beta/gamma
         const overlay = document.querySelector('.overlay-glass');
+        let angle;
+        let orientation = (Math.abs(e.beta) > Math.abs(e.gamma)) ? 'portrait' : 'landscape';
+        if (orientation === 'portrait') {
+            angle = 90 + e.gamma + e.alpha + e.beta/2;
+        } else {
+            angle = 90 + e.beta + e.alpha + e.gamma/2;
+        }
+        const jitter = (Math.random()-0.5) * 5;
+        angle += jitter;
         if (overlay) {
-            let orientation = (Math.abs(e.beta) > Math.abs(e.gamma)) ? 'portrait' : 'landscape';
-            let angle;
-            if (orientation === 'portrait') {
-                angle = 90 + e.gamma + e.alpha + e.beta/2;
-            } else {
-                angle = 90 + e.beta + e.alpha + e.gamma/2;
-            }
-            const jitter = (Math.random()-0.5) * 5;
-            angle += jitter;
             overlay.style.setProperty('--overlay-reflection-angle', `${angle}deg`);
             overlay.style.setProperty('--overlay-reflection-brightness', 0.45);
         }
+        // Для wood-reflection
+        const images = document.querySelectorAll('.wood-reflection');
+        images.forEach(img => {
+            img.classList.add('with-wood-reflection');
+            img.style.setProperty('--wood-reflection-angle', `${angle}deg`);
+            img.style.setProperty('--wood-reflection-brightness', 0.22);
+        });
         // Выводим значения в #gyro-info
         const info = document.getElementById('gyro-info');
         if (info) {
@@ -1126,6 +1168,53 @@ setInterval(setHeroBackgroundByTime, 60000);
         const info = document.getElementById('gyro-info');
         if (info) info.style.display = 'none';
     }
+    // === Кэш плиток по зонам ===
+    let tileZoneCache = null;
+    function updateTileZoneCache() {
+        tileZoneCache = {
+            hero: Array.from(document.querySelectorAll('.hero .service__card, .hero .stat')),
+            about: Array.from(document.querySelectorAll('.about .service__card, .about .stat')),
+            services: Array.from(document.querySelectorAll('.services .service__card, .services .stat'))
+        };
+    }
+    // Throttle для обновления кэша и классов
+    let tileZoneUpdatePending = false;
+    function scheduleTileZoneUpdate() {
+        if (tileZoneUpdatePending) return;
+        tileZoneUpdatePending = true;
+        requestAnimationFrame(() => {
+            updateTileZoneCache();
+            if (document.body.classList.contains('with-overlay-glass')) setTileZoneClasses();
+            tileZoneUpdatePending = false;
+        });
+    }
+    window.addEventListener('resize', scheduleTileZoneUpdate);
+    window.addEventListener('scroll', scheduleTileZoneUpdate, true);
+    // === END Кэш ===
+    function setTileZoneClasses() {
+        if (!tileZoneCache) updateTileZoneCache();
+        // Hero: .matte-tile
+        tileZoneCache.hero.forEach(el => {
+            if (!el.classList.contains('matte-tile')) el.classList.add('matte-tile');
+            el.classList.remove('metallic-tile', 'water-tile');
+        });
+        // About: .metallic-tile
+        tileZoneCache.about.forEach(el => {
+            if (!el.classList.contains('metallic-tile')) el.classList.add('metallic-tile');
+            el.classList.remove('matte-tile', 'water-tile');
+        });
+        // Services: .water-tile
+        tileZoneCache.services.forEach(el => {
+            if (!el.classList.contains('water-tile')) el.classList.add('water-tile');
+            el.classList.remove('matte-tile', 'metallic-tile');
+        });
+    }
+    function clearTileZoneClasses() {
+        if (!tileZoneCache) updateTileZoneCache();
+        [...tileZoneCache.hero, ...tileZoneCache.about, ...tileZoneCache.services].forEach(el => {
+            el.classList.remove('matte-tile', 'metallic-tile', 'water-tile');
+        });
+    }
     function enable() {
         enabled = true;
         if (isMobile) {
@@ -1141,6 +1230,18 @@ setInterval(setHeroBackgroundByTime, 60000);
         }
         document.body.classList.add('with-overlay-glass');
         document.addEventListener('visibilitychange', onVisibilityChange);
+        setWoodReflection();
+        // Матовый эффект для hero
+        const hero = document.querySelector('.hero');
+        if (hero) hero.classList.add('matte-hero');
+        // Металлический эффект для about
+        const about = document.querySelector('.about');
+        if (about) about.classList.add('metallic-about');
+        // Водяной эффект для services
+        const services = document.querySelector('.services');
+        if (services) services.classList.add('water-service');
+        // Зональные классы для плит
+        setTileZoneClasses();
     }
     function disable() {
         enabled = false;
@@ -1153,6 +1254,18 @@ setInterval(setHeroBackgroundByTime, 60000);
         cards().forEach(clearReflection);
         document.body.classList.remove('with-overlay-glass');
         document.removeEventListener('visibilitychange', onVisibilityChange);
+        clearWoodReflection();
+        // Убрать матовый эффект с hero
+        const hero = document.querySelector('.hero');
+        if (hero) hero.classList.remove('matte-hero');
+        // Убрать металлический эффект с about
+        const about = document.querySelector('.about');
+        if (about) about.classList.remove('metallic-about');
+        // Убрать водяной эффект с services
+        const services = document.querySelector('.services');
+        if (services) services.classList.remove('water-service');
+        // Убрать зональные классы с плит
+        clearTileZoneClasses();
     }
     toggle.addEventListener('change', () => {
         if (toggle.checked) enable();

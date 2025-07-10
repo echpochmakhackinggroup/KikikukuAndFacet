@@ -1504,3 +1504,111 @@ body:not(.with-overlay-glass) .overlay-glass {
   opacity: 0 !important;
   transition: opacity 0.3s;
 } 
+
+.wood-reflection.with-wood-reflection {
+  position: relative;
+  z-index: 2;
+  filter: drop-shadow(0 8px 32px rgba(120,80,40,0.22)) drop-shadow(0 2px 8px rgba(38,99,235,0.10));
+  transition: filter 0.4s;
+}
+.wood-reflection.with-wood-reflection::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+  background:
+    linear-gradient(var(--wood-reflection-angle,120deg), rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.00) 80%),
+    repeating-linear-gradient(45deg, rgba(120,80,40,0.04) 0 8px, transparent 8px 16px);
+  opacity: var(--wood-reflection-brightness, 0.22);
+  filter: blur(7px) saturate(0.9);
+  transition: background 0.5s, opacity 0.4s;
+  border-radius: inherit;
+} 
+
+.matte-hero {
+  filter: blur(2.5px) brightness(0.97) contrast(0.93) saturate(0.96);
+  transition: filter 0.4s;
+} 
+
+.metallic-about {
+  position: relative;
+  filter: contrast(1.08) saturate(1.12) brightness(1.01);
+  transition: filter 0.4s;
+}
+.metallic-about::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  background:
+    linear-gradient(120deg, rgba(220,220,255,0.13) 0%, rgba(180,180,220,0.09) 40%, rgba(255,255,255,0.00) 80%),
+    repeating-linear-gradient(60deg, rgba(180,200,255,0.08) 0 2px, transparent 2px 8px),
+    radial-gradient(circle at 70% 30%, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.00) 60%);
+  mix-blend-mode: lighten;
+  opacity: 0.85;
+  border-radius: inherit;
+  transition: background 0.5s, opacity 0.4s;
+} 
+
+.water-service {
+  position: relative;
+  filter: contrast(0.98) saturate(1.08) brightness(0.98) blur(0.5px);
+  transition: filter 0.4s;
+}
+.water-service::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  background:
+    linear-gradient(120deg, rgba(38,99,235,0.13) 0%, rgba(0,40,120,0.11) 60%, rgba(0,0,0,0.00) 90%),
+    repeating-linear-gradient(100deg, rgba(38,99,235,0.08) 0 3px, transparent 3px 12px),
+    radial-gradient(circle at 60% 80%, rgba(38,99,235,0.18) 0%, rgba(255,255,255,0.00) 70%);
+  mix-blend-mode: lighten;
+  opacity: 0.82;
+  border-radius: inherit;
+  transition: background 0.5s, opacity 0.4s;
+  filter: blur(1.5px) contrast(1.08) saturate(1.12);
+} 
+
+.matte-tile.with-reflection::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+  background:
+    linear-gradient(var(--reflection-angle,120deg), rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.00) 80%);
+  opacity: var(--reflection-brightness, 0.18);
+  filter: blur(3.5px) saturate(0.95);
+  border-radius: inherit;
+}
+.metallic-tile.with-reflection::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+  background:
+    linear-gradient(var(--reflection-angle,120deg), rgba(220,220,255,0.16) 0%, rgba(180,180,220,0.09) 40%, rgba(255,255,255,0.00) 80%),
+    repeating-linear-gradient(60deg, rgba(180,200,255,0.08) 0 2px, transparent 2px 8px);
+  opacity: var(--reflection-brightness, 0.32);
+  filter: blur(2.2px) contrast(1.08) saturate(1.12);
+  border-radius: inherit;
+}
+.water-tile.with-reflection::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+  background:
+    linear-gradient(var(--reflection-angle,120deg), rgba(38,99,235,0.13) 0%, rgba(0,40,120,0.11) 60%, rgba(0,0,0,0.00) 90%),
+    repeating-linear-gradient(100deg, rgba(38,99,235,0.08) 0 3px, transparent 3px 12px);
+  opacity: var(--reflection-brightness, 0.28);
+  filter: blur(2.8px) contrast(1.08) saturate(1.12);
+  border-radius: inherit;
+} 
