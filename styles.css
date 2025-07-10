@@ -1371,6 +1371,9 @@ body.dark-theme .fullscreen-image-section {
     right: 7%;
     transform: none;
 }
+.image-marker--start-mobile {
+    bottom: 0.01% !important;
+}
 .image-marker-dot {
     width: 22px;
     height: 22px;
@@ -1431,6 +1434,9 @@ body.dark-theme .image-marker-desc {
 }
 
 .img-mobile {
+  width: 100%;
+  max-width: 95vw;
+  height: auto;
   display: none;
 }
 .img-desktop {
@@ -1450,14 +1456,20 @@ body.dark-theme .image-marker-desc {
 }
 
 @media (min-width: 768px) {
+  .image-marker--start,
   .image-marker--end {
+    left: auto;
+    right: auto;
     top: auto;
-    bottom: 5%;
-    left: 7%;
+    bottom: auto;
+    transform: none;
   }
-  .image-marker--start {
-    top: auto;
-    bottom: 5%;
-    right: 7%;
+} 
+
+@media (max-width: 490px) {
+  .image-marker--start-mobile,
+  .mobile-only .image-marker--end {
+    left: 2% !important;
+    right: auto !important;
   }
 } 

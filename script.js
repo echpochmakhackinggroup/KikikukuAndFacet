@@ -1005,3 +1005,46 @@ setInterval(setHeroBackgroundByTime, 60000);
         gyroBtn.style.display = 'none';
     }
 })(); 
+
+// === Позиционирование меток по ширине картинки (только для десктопа) ===
+function positionImageMarkers() {
+  const img = document.querySelector('.img-desktop');
+  const container = document.querySelector('.image-marker-container');
+  const markerStart = container.querySelector('.image-marker--start');
+  const markerEnd = container.querySelector('.image-marker--end');
+  if (!img || !markerStart || !markerEnd) return;
+  // Только на десктопе
+  if (window.innerWidth < 768) {
+    markerStart.style.left = '';
+    markerEnd.style.left = '';
+    markerStart.style.transform = '';
+    markerEnd.style.transform = '';
+    return;
+  }
+  // Получаем реальные размеры картинки
+  const rect = img.getBoundingClientRect();
+  const containerRect = container.getBoundingClientRect();
+  // Смещение контейнера относительно окна
+  const offsetLeft = rect.left - containerRect.left;
+  // 42 равные части
+  const part = rect.width / 42;
+  // Центр метки на позиции чуть ближе друг к другу
+  const startX = offsetLeft + part * 2.9;
+  const endX = offsetLeft + part * 39.3;
+  // Сдвигаем так, чтобы центр метки совпал с нужной точкой
+  const markerWidth = markerStart.offsetWidth;
+  markerStart.style.left = `${startX - markerWidth/2}px`;
+  markerStart.style.transform = 'none';
+  markerEnd.style.left = `${endX - markerWidth/2}px`;
+  markerEnd.style.transform = 'none';
+  // Вертикальное позиционирование: обе метки на одной высоте (например, 95% высоты картинки)
+  const markerHeight = markerStart.offsetHeight;
+  const y = rect.top - containerRect.top + rect.height * 0.95 - markerHeight / 2;
+  markerStart.style.top = `${y}px`;
+  markerStart.style.bottom = '';
+  markerEnd.style.top = `${y}px`;
+  markerEnd.style.bottom = '';
+}
+window.addEventListener('DOMContentLoaded', positionImageMarkers);
+window.addEventListener('resize', positionImageMarkers);
+window.addEventListener('load', positionImageMarkers); 
