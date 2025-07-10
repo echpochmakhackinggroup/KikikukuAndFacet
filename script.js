@@ -840,15 +840,119 @@ setInterval(setHeroBackgroundByTime, 60000);
     let lastGyro = {beta: 0, gamma: 0};
     const cards = () => Array.from(document.querySelectorAll('.service__card, .stat'));
 
+    // === Кэш препятствий для блика ===
+    let obstaclesCache = null;
+    function updateObstaclesCache() {
+        const allCards = Array.from(document.querySelectorAll('.service__card, .stat'));
+        const extraSelectors = [
+          '.service__icon', 'h3', 'p', '.stat h3', '.stat p', '.section__title',
+          '.image-marker-label', '.image-marker-dot', '.image-marker-desc'
+        ];
+        const extraObstacles = Array.from(document.querySelectorAll(extraSelectors.join(',')));
+        obstaclesCache = {
+            cards: allCards.map(el => ({el, rect: el.getBoundingClientRect()})),
+            text: extraObstacles.filter(el => !allCards.includes(el)).map(el => ({el, rect: el.getBoundingClientRect()}))
+        };
+    }
+    // Обновлять кэш при resize/scroll (throttle)
+    let cacheUpdatePending = false;
+    function scheduleObstaclesCacheUpdate() {
+        if (cacheUpdatePending) return;
+        cacheUpdatePending = true;
+        requestAnimationFrame(() => {
+            updateObstaclesCache();
+            cacheUpdatePending = false;
+        });
+    }
+    window.addEventListener('resize', scheduleObstaclesCacheUpdate);
+    window.addEventListener('scroll', scheduleObstaclesCacheUpdate, true);
+    // Инициализация кэша при старте
+    updateObstaclesCache();
+    // === END Кэш ===
+    // === Spatial Grid для препятствий ===
+    const GRID_SIZE = 8; // 8x8 сетка
+    let spatialGrid = null;
+    function buildSpatialGrid() {
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        const cellW = width / GRID_SIZE;
+        const cellH = height / GRID_SIZE;
+        spatialGrid = Array.from({length: GRID_SIZE * GRID_SIZE}, () => []);
+        function getCellsForRect(rect) {
+            const x1 = Math.floor(rect.left / cellW);
+            const y1 = Math.floor(rect.top / cellH);
+            const x2 = Math.floor((rect.right-1) / cellW);
+            const y2 = Math.floor((rect.bottom-1) / cellH);
+            const cells = [];
+            for (let x = Math.max(0, x1); x <= Math.min(GRID_SIZE-1, x2); x++) {
+                for (let y = Math.max(0, y1); y <= Math.min(GRID_SIZE-1, y2); y++) {
+                    cells.push(y * GRID_SIZE + x);
+                }
+            }
+            return cells;
+        }
+        // Добавляем все препятствия
+        if (!obstaclesCache) updateObstaclesCache();
+        for (const arr of [obstaclesCache.cards, obstaclesCache.text]) {
+            for (const obj of arr) {
+                const cells = getCellsForRect(obj.rect);
+                for (const idx of cells) {
+                    spatialGrid[idx].push(obj);
+                }
+            }
+        }
+    }
+    // Обновлять spatial grid при resize/scroll и обновлении кэша
+    function updateSpatialGrid() {
+        buildSpatialGrid();
+    }
+    window.addEventListener('resize', updateSpatialGrid);
+    window.addEventListener('scroll', updateSpatialGrid, true);
+    // Инициализация spatial grid при старте
+    updateSpatialGrid();
+    // === END Spatial Grid ===
+    // Получить препятствия на пути луча (bresenham по сетке)
+    function getObstaclesOnRay(x0, y0, x1, y1) {
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        const cellW = width / GRID_SIZE;
+        const cellH = height / GRID_SIZE;
+        let obstacles = new Set();
+        // Алгоритм Брезенхэма по сетке
+        let cx0 = Math.floor(x0 / cellW), cy0 = Math.floor(y0 / cellH);
+        let cx1 = Math.floor(x1 / cellW), cy1 = Math.floor(y1 / cellH);
+        let dx = Math.abs(cx1 - cx0), dy = Math.abs(cy1 - cy0);
+        let sx = cx0 < cx1 ? 1 : -1, sy = cy0 < cy1 ? 1 : -1;
+        let err = dx - dy;
+        let cx = cx0, cy = cy0;
+        while (true) {
+            const idx = cy * GRID_SIZE + cx;
+            if (spatialGrid[idx]) for (const obj of spatialGrid[idx]) obstacles.add(obj);
+            if (cx === cx1 && cy === cy1) break;
+            let e2 = 2 * err;
+            if (e2 > -dy) { err -= dy; cx += sx; }
+            if (e2 < dx) { err += dx; cy += sy; }
+        }
+        return Array.from(obstacles);
+    }
     // Возвращает минимальное расстояние от мышки до пересечения с другой плитой (или Infinity)
     function obstructionDistance(card, mouseX, mouseY, allCards) {
         const rectA = card.getBoundingClientRect();
         const cx = rectA.left + rectA.width/2;
         const cy = rectA.top + rectA.height/2;
         let minDist = Infinity;
-        for (const other of allCards) {
-            if (other === card) continue;
-            const rectB = other.getBoundingClientRect();
+        let minDistText = Infinity;
+        if (!obstaclesCache) updateObstaclesCache();
+        if (!spatialGrid) updateSpatialGrid();
+        // Получаем только препятствия на пути луча
+        const obstaclesOnRay = getObstaclesOnRay(mouseX, mouseY, cx, cy);
+        // Вектор луча
+        const minX = Math.min(mouseX, cx), maxX = Math.max(mouseX, cx);
+        const minY = Math.min(mouseY, cy), maxY = Math.max(mouseY, cy);
+        for (const obj of obstaclesOnRay) {
+            const el = obj.el, rectB = obj.rect;
+            if (el === card) continue;
+            if (rectB.right < minX || rectB.left > maxX || rectB.bottom < minY || rectB.top > maxY) continue;
             const lines = [
                 [rectB.left, rectB.top, rectB.right, rectB.top],
                 [rectB.right, rectB.top, rectB.right, rectB.bottom],
@@ -859,11 +963,15 @@ setInterval(setHeroBackgroundByTime, 60000);
                 const pt = segmentIntersection(mouseX, mouseY, cx, cy, x1, y1, x2, y2);
                 if (pt) {
                     const dist = Math.hypot(pt.x - mouseX, pt.y - mouseY);
-                    if (dist < minDist) minDist = dist;
+                    if (obstaclesCache.cards.some(o => o.el === el)) {
+                        if (dist < minDist) { minDist = dist; if (minDist < 5) break; }
+                    } else {
+                        if (dist < minDistText) { minDistText = dist; if (minDistText < 5) break; }
+                    }
                 }
             }
         }
-        return minDist;
+        return {minDist, minDistText};
     }
     // Возвращает точку пересечения двух отрезков или null
     function segmentIntersection(x1, y1, x2, y2, x3, y3, x4, y4) {
@@ -882,15 +990,27 @@ setInterval(setHeroBackgroundByTime, 60000);
         const rect = card.getBoundingClientRect();
         const cx = rect.left + rect.width/2;
         const cy = rect.top + rect.height/2;
-        const dx = mouseX - cx;
-        const dy = mouseY - cy;
-        const angle = Math.atan2(dy, dx) * 180 / Math.PI + 180;
+        // Смещение к центру экрана
+        const screenCenterX = window.innerWidth / 2;
+        const screenCenterY = window.innerHeight / 2;
+        // Усредняем мышь и центр экрана для более "реального" блика
+        const blend = 0.5; // 0 — только мышь, 1 — только центр экрана
+        const targetX = mouseX * (1-blend) + screenCenterX * blend;
+        const targetY = mouseY * (1-blend) + screenCenterY * blend;
+        const dx = targetX - cx;
+        const dy = targetY - cy;
+        // Добавим небольшое дрожание блика
+        const jitter = (Math.random()-0.5) * 5; // +/-2.5 градуса
+        const angle = Math.atan2(dy, dx) * 180 / Math.PI + 180 + jitter;
         // Яркость блика: если нет перекрытия — 1, если есть — плавно убывает с расстоянием
         let brightness = 1;
-        const minDist = obstructionDistance(card, mouseX, mouseY, allCards);
+        const {minDist, minDistText} = obstructionDistance(card, mouseX, mouseY, allCards);
         if (minDist !== Infinity) {
-            // Чем ближе перекрытие — тем слабее (0.1...0.7)
+            // Чем ближе перекрытие плитой — тем слабее (0.1...0.7)
             brightness = Math.max(0.1, Math.min(0.7, minDist/200));
+        } else if (minDistText !== Infinity) {
+            // Если только текст/иконка — ослабление слабее (0.3...0.85)
+            brightness = Math.max(0.3, Math.min(0.85, minDistText/200));
         }
         card.style.setProperty('--reflection-angle', `${angle}deg`);
         card.style.setProperty('--reflection-brightness', brightness.toFixed(2));
@@ -921,6 +1041,39 @@ setInterval(setHeroBackgroundByTime, 60000);
         card.style.removeProperty('--reflection-x');
         card.style.removeProperty('--reflection-y');
     }
+    let lastOverlay = {angle: null, brightness: null};
+    let overlayRafId = null;
+    let overlayPending = false;
+    function setOverlayGlass(mouseX, mouseY) {
+        if (overlayPending) return;
+        overlayPending = true;
+        if (overlayRafId) cancelAnimationFrame(overlayRafId);
+        overlayRafId = requestAnimationFrame(() => {
+            overlayPending = false;
+            const overlay = document.querySelector('.overlay-glass');
+            if (!overlay) return;
+            // Центр экрана
+            const cx = window.innerWidth / 2;
+            const cy = window.innerHeight / 2;
+            // Если нет мыши — блик идёт строго вверх
+            let dx = 0, dy = -1;
+            if (typeof mouseX === 'number' && typeof mouseY === 'number') {
+                dx = mouseX - cx;
+                dy = mouseY - cy;
+            }
+            // Добавим небольшое дрожание
+            const jitter = (Math.random()-0.5) * 5;
+            const angle = Math.round(Math.atan2(dy, dx) * 180 / Math.PI + 180 + jitter);
+            // Яркость блика чуть слабее, чем на карточках
+            let brightness = 0.45;
+            // Обновлять только если изменилось
+            if (lastOverlay.angle === angle && lastOverlay.brightness === brightness) return;
+            lastOverlay.angle = angle;
+            lastOverlay.brightness = brightness;
+            overlay.style.setProperty('--overlay-reflection-angle', `${angle}deg`);
+            overlay.style.setProperty('--overlay-reflection-brightness', brightness);
+        });
+    }
     function onMouseMove(e) {
         const mouseX = e.clientX;
         const mouseY = e.clientY;
@@ -928,11 +1081,27 @@ setInterval(setHeroBackgroundByTime, 60000);
         if (rafId) cancelAnimationFrame(rafId);
         rafId = requestAnimationFrame(() => {
             all.forEach(card => setReflection(card, mouseX, mouseY, all));
+            setOverlayGlass(mouseX, mouseY);
         });
     }
     function onGyro(e) {
         lastGyro = {beta: e.beta, gamma: e.gamma, alpha: e.alpha};
         cards().forEach(card => setReflectionGyro(card, e.alpha, e.beta, e.gamma));
+        // Для overlay-glass: угол блика зависит от beta/gamma
+        const overlay = document.querySelector('.overlay-glass');
+        if (overlay) {
+            let orientation = (Math.abs(e.beta) > Math.abs(e.gamma)) ? 'portrait' : 'landscape';
+            let angle;
+            if (orientation === 'portrait') {
+                angle = 90 + e.gamma + e.alpha + e.beta/2;
+            } else {
+                angle = 90 + e.beta + e.alpha + e.gamma/2;
+            }
+            const jitter = (Math.random()-0.5) * 5;
+            angle += jitter;
+            overlay.style.setProperty('--overlay-reflection-angle', `${angle}deg`);
+            overlay.style.setProperty('--overlay-reflection-brightness', 0.45);
+        }
         // Выводим значения в #gyro-info
         const info = document.getElementById('gyro-info');
         if (info) {
@@ -970,6 +1139,8 @@ setInterval(setHeroBackgroundByTime, 60000);
             window.addEventListener('mousemove', onMouseMove);
             cards().forEach(card => card.classList.add('with-reflection'));
         }
+        document.body.classList.add('with-overlay-glass');
+        document.addEventListener('visibilitychange', onVisibilityChange);
     }
     function disable() {
         enabled = false;
@@ -980,6 +1151,8 @@ setInterval(setHeroBackgroundByTime, 60000);
             window.removeEventListener('mousemove', onMouseMove);
         }
         cards().forEach(clearReflection);
+        document.body.classList.remove('with-overlay-glass');
+        document.removeEventListener('visibilitychange', onVisibilityChange);
     }
     toggle.addEventListener('change', () => {
         if (toggle.checked) enable();

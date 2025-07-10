@@ -301,6 +301,19 @@ section {
     background-repeat: no-repeat;
 }
 
+.service__card.with-reflection::after, .stat.with-reflection::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  z-index: 3;
+  background: linear-gradient(120deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.04) 60%, rgba(255,255,255,0.00) 100%);
+  opacity: 0.7;
+  filter: blur(2.5px) saturate(1.1);
+  transition: opacity 0.4s, background 0.4s;
+  border-radius: inherit;
+}
+
 /* Модальные окна */
 .modal {
     display: none;
@@ -1472,4 +1485,22 @@ body.dark-theme .image-marker-desc {
     left: 2% !important;
     right: auto !important;
   }
+} 
+
+.overlay-glass {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.00) 60%),
+    linear-gradient(var(--overlay-reflection-angle,120deg), rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.00) 80%);
+  opacity: var(--overlay-reflection-brightness, 0.45);
+  transition: background 0.5s, opacity 0.4s;
+  pointer-events: none;
+  will-change: background, opacity;
+}
+body:not(.with-overlay-glass) .overlay-glass {
+  opacity: 0 !important;
+  transition: opacity 0.3s;
 } 
