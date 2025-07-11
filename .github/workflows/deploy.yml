@@ -18,6 +18,10 @@ jobs:
         env:
           FIREBASE_CONFIG_JS: ${{ secrets.FIREBASE_CONFIG_JS }}
 
+      # Явно копируем firebase-config.js в publish_dir (./)
+      - name: Ensure firebase-config.js is in publish_dir
+        run: cp firebase-config.js ./
+
       # (Если нужен build — добавьте шаги сборки)
 
       - name: Deploy to GitHub Pages
