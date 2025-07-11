@@ -16,9 +16,22 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <!-- Firebase Firestore -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <!-- Firebase config (локальный, не коммитить) -->
-    <script src="firebase-config.js"></script>
-
+    <!-- Firebase инициализация -->
+    <script>
+      var firebaseConfig = {
+        apiKey: "AIzaSyA0SHaJ4MoO50Vx1u59gPpmXer5bNjBdZk",
+        authDomain: "sait-s-vitoi.firebaseapp.com",
+        databaseURL: "https://sait-s-vitoi-default-rtdb.firebaseio.com",
+        projectId: "sait-s-vitoi",
+        storageBucket: "sait-s-vitoi.firebasestorage.app",
+        messagingSenderId: "182870319147",
+        appId: "1:182870319147:web:2b4301d6c2232c8bed4a6e",
+        measurementId: "G-3T12739LZB"
+      };
+      firebase.initializeApp(firebaseConfig);
+    </script>
+    <!-- Ваш основной скрипт -->
+    <script src="script.js"></script>
 </head>
 <body>
     <div class="overlay-glass"></div>
@@ -311,6 +324,5 @@
         </div>
     </footer>
 
-    <script src="script.js"></script>
 </body>
 </html> 
