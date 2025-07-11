@@ -859,6 +859,106 @@ setInterval(setHeroBackgroundByTime, 60000);
     });
 })();
 
+// === Firebase config ===
+const firebaseConfig = {
+  apiKey: "AIzaSyA0SHaJ4MoO50Vx1u59gPpmXer5bNjBdZk",
+  authDomain: "sait-s-vitoi.firebaseapp.com",
+  databaseURL: "https://sait-s-vitoi-default-rtdb.firebaseio.com",
+  projectId: "sait-s-vitoi",
+  storageBucket: "sait-s-vitoi.firebasestorage.app",
+  messagingSenderId: "182870319147",
+  appId: "1:182870319147:web:2b4301d6c2232c8bed4a6e",
+  measurementId: "G-3T12739LZB"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// === Auth UI ===
+const loginBtn = document.getElementById('login-btn');
+const logoutBtn = document.getElementById('logout-btn');
+const userInfo = document.getElementById('user-info');
+const commentForm = document.getElementById('comment-form');
+const commentInput = document.getElementById('comment-input');
+const commentsList = document.getElementById('comments-list');
+
+loginBtn.onclick = () => {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider);
+};
+logoutBtn.onclick = () => auth.signOut();
+
+auth.onAuthStateChanged(user => {
+  if (user) {
+    loginBtn.style.display = 'none';
+    logoutBtn.style.display = '';
+    userInfo.textContent = `Вы вошли как ${user.displayName}`;
+    commentForm.style.display = '';
+    document.querySelector('.user-privacy-note').style.display = '';
+  } else {
+    loginBtn.style.display = '';
+    logoutBtn.style.display = 'none';
+    userInfo.textContent = '';
+    commentForm.style.display = 'none';
+    document.querySelector('.user-privacy-note').style.display = 'none';
+  }
+});
+
+// === Comments ===
+function renderComment(doc) {
+  const data = doc.data();
+  const div = document.createElement('div');
+  div.innerHTML = `<b>${data.user}</b> <span>${new Date(data.timestamp?.toDate?.() || Date.now()).toLocaleString()}</span><br>${data.text}`;
+  div.style.opacity = '0';
+  div.style.transform = 'translateY(20px)';
+  commentsList.appendChild(div);
+  setTimeout(() => {
+    div.style.transition = 'opacity 0.5s, transform 0.5s';
+    div.style.opacity = '1';
+    div.style.transform = 'translateY(0)';
+  }, 10);
+}
+
+function loadComments() {
+  // Анимируем исчезновение старых комментариев
+  const oldComments = Array.from(commentsList.children);
+  oldComments.forEach(div => {
+    div.style.transition = 'opacity 0.4s';
+    div.style.opacity = '0';
+  });
+  setTimeout(() => {
+    commentsList.innerHTML = '';
+    db.collection('comments').orderBy('timestamp', 'desc').limit(5).get().then(snapshot => {
+      snapshot.forEach(renderComment);
+    });
+  }, 400);
+}
+
+commentForm.onsubmit = function(e) {
+  e.preventDefault();
+  const user = auth.currentUser;
+  if (!user) return;
+  const text = commentInput.value.trim();
+  if (!text) return;
+  db.collection('comments').add({
+    user: user.displayName || user.email || 'Аноним',
+    uid: user.uid,
+    text,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
+    commentInput.value = '';
+    loadComments();
+  });
+};
+
+auth.onAuthStateChanged(user => {
+  loadComments();
+});
+
+// При загрузке страницы
+// Удаляю: loadComments();
+
 // --- Эффект отражения для плит при движении мышки или гироскопа ---
 (function setupReflectionEffect() {
     const toggle = document.getElementById('reflection-toggle');

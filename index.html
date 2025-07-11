@@ -17,7 +17,6 @@
     <!-- Firebase Firestore -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <!-- Firebase config (локальный, не коммитить) -->
-    <script src="firebase-config.js"></script>
 
 </head>
 <body>
@@ -275,16 +274,22 @@
         </div>
     </div>
 
-    <!-- Firebase Auth UI + Комментарии в одном контейнере -->
+    <!-- Комментарии и авторизация -->
     <div class="centered-sections">
-      <div id="auth-section" style="max-width:400px;margin:2em auto;display:none;">
+      <div id="auth-section" style="max-width:400px;margin:2em auto;">
         <h2>Вход или регистрация</h2>
         <button id="login-btn">Войти через Google</button>
         <button id="logout-btn" style="display:none;">Выйти</button>
         <div id="user-info" style="margin-top:1em;"></div>
         <div class="user-privacy-note" style="display:none;">Мы не собираем вашу информацию в злых целях</div>
       </div>
-      <!-- Удалён блок комментариев и всё, что с ним связано -->
+      <div id="comments-section" style="max-width:500px;margin:2em auto;">
+        <form id="comment-form" style="display:none;">
+          <textarea id="comment-input" placeholder="Ваш комментарий или пожелание..." required></textarea>
+          <button type="submit">Отправить</button>
+        </form>
+        <div id="comments-list"></div>
+      </div>
     </div>
 
     <!-- Гироскоп: значения для мобильных -->

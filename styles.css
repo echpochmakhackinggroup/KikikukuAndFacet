@@ -1613,110 +1613,143 @@ body:not(.with-overlay-glass) .overlay-glass {
   border-radius: inherit;
 } 
 
-/* --- Красивый стиль для секции входа и комментариев --- */
-#auth-section, #comments-section {
+/* --- СТИЛИ ДЛЯ АВТОРИЗАЦИИ, КОММЕНТАРИЕВ И ФОРМЫ --- */
+#auth-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   background: #fff;
   border-radius: 18px;
   box-shadow: 0 4px 32px rgba(38,99,235,0.10), 0 1.5px 8px rgba(0,0,0,0.03);
-  padding: 2.2em 2em 2em 2em;
-  margin-top: 2.5em;
-  margin-bottom: 2.5em;
-  transition: box-shadow 0.3s, background 0.3s;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-#auth-section h2, #comments-section h2 {
+  padding: 2em 1.5em 1.5em 1.5em;
+  margin-bottom: 2em;
   text-align: center;
-  color: #2563eb;
-  margin-bottom: 1.2em;
-  font-size: 1.5em;
-  letter-spacing: 0.01em;
+  min-height: 260px;
 }
-#auth-section button, #logout-btn, #login-btn, #comment-form button {
+#auth-section > * {
+  width: 100%;
+  max-width: 350px;
+  box-sizing: border-box;
+}
+#auth-section h2 {
+  color: #2563eb;
+  font-size: 1.3em;
+  margin-bottom: 1em;
+}
+#login-btn, #logout-btn {
+  align-self: center;
   background: linear-gradient(90deg, #667eea 0%, #2563eb 100%);
   color: #fff;
   border: none;
-  border-radius: 8px;
-  padding: 0.7em 1.5em;
-  font-size: 1.08em;
+  border-radius: 12px;
+  padding: 0.7em 2.2em;
+  font-size: 1.15em;
   font-weight: 500;
-  margin: 0.5em 0.2em 0.5em 0;
+  margin: 0.5em 0 1em 0;
   box-shadow: 0 2px 8px rgba(38,99,235,0.08);
   cursor: pointer;
   transition: background 0.3s, box-shadow 0.3s, transform 0.2s;
-  display: block;
 }
-#auth-section button:hover, #comment-form button:hover {
+#login-btn:hover, #logout-btn:hover {
   background: linear-gradient(90deg, #2563eb 0%, #667eea 100%);
-  box-shadow: 0 4px 16px rgba(38,99,235,0.13);
   transform: translateY(-2px) scale(1.04);
 }
 #user-info {
+  font-size: 1.3em;
+  font-weight: bold;
+  margin-bottom: 0.5em;
+}
+.user-privacy-note {
+  color: #888;
+  font-size: 1em;
+  margin-bottom: 0.5em;
+}
+
+#comments-section {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 4px 32px rgba(38,99,235,0.10), 0 1.5px 8px rgba(0,0,0,0.03);
+  padding: 2em 1.5em 1.5em 1.5em;
+  margin-bottom: 2em;
+}
+#comments-section h2 {
+  color: #2563eb;
+  font-size: 1.3em;
+  margin-bottom: 1em;
   text-align: center;
-  color: #444;
-  font-size: 1.08em;
-  margin-top: 0.7em;
-  margin-bottom: 0.7em;
 }
 #comment-form {
+  background: #e6fae6;
+  border-radius: 14px;
+  box-shadow: 0 2px 12px rgba(34,197,94,0.08);
+  padding: 1.2em 1em 1em 1em;
+  margin-bottom: 1.5em;
+  border: 1.5px solid #b6e7b6;
   display: flex;
   flex-direction: column;
   gap: 0.7em;
-  margin-bottom: 1.2em;
   align-items: center;
-  width: 100%;
 }
 #comment-input {
-  border: 1.5px solid #e0e7ff;
+  border: 1.5px solid #b6e7b6;
   border-radius: 8px;
   padding: 0.9em 1em;
   font-size: 1.08em;
   resize: vertical;
   min-height: 60px;
-  background: #f8fafc;
-  transition: border 0.2s, box-shadow 0.2s, background 0.3s, color 0.3s;
-  box-shadow: 0 1.5px 8px rgba(38,99,235,0.03);
+  background: #f6fff6;
+  color: #222;
   width: 100%;
   max-width: 500px;
-  color: #222;
-  display: block;
+  margin-bottom: 0.7em;
 }
 #comment-input:focus {
-  border-color: #2563eb;
+  border-color: #22c55e;
   outline: none;
-  box-shadow: 0 2px 12px rgba(38,99,235,0.10);
+}
+#comment-form button {
+  background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.7em 2.2em;
+  font-size: 1.1em;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(34,197,94,0.10);
+  cursor: pointer;
+  transition: background 0.3s, box-shadow 0.3s, transform 0.2s;
+}
+#comment-form button:hover {
+  background: linear-gradient(90deg, #16a34a 0%, #22c55e 100%);
+  transform: translateY(-2px) scale(1.04);
 }
 #comments-list {
-  margin-top: 1.2em;
-  width: 100%;
+  min-height: 7em;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  justify-content: flex-start;
 }
 #comments-list > div {
-  background: #f8fafc;
-  border-radius: 10px;
-  box-shadow: 0 1.5px 8px rgba(38,99,235,0.04);
+  background: #e6fae6;
+  border-radius: 12px;
+  box-shadow: 0 1.5px 8px rgba(34,197,94,0.06);
+  border: 1.5px solid #b6e7b6;
   padding: 1em 1.2em;
   margin-bottom: 1em;
-  transition: box-shadow 0.2s, background 0.2s, color 0.3s;
-  border: 1px solid #e0e7ff;
-  width: 100%;
-  max-width: 500px;
-  text-align: left;
-}
-#comments-list > div:hover {
-  background: #e0e7ff;
-  box-shadow: 0 4px 16px rgba(38,99,235,0.10);
+  color: #1a3d1a;
+  font-size: 1.08em;
 }
 #comments-list b {
   color: #2563eb;
+  font-size: 1.1em;
 }
 #comments-list span {
   color: #888;
   font-size: 0.97em;
+  margin-left: 0.5em;
 }
+
 @media (max-width: 600px) {
   #auth-section, #comments-section {
     padding: 1.2em 0.5em 1.2em 0.5em;
@@ -1729,52 +1762,13 @@ body:not(.with-overlay-glass) .overlay-glass {
     padding: 0.7em 0.5em;
   }
 }
-body.dark-theme #auth-section, body.dark-theme #comments-section {
-  background: #181c2a;
-  box-shadow: 0 4px 32px rgba(38,99,235,0.18), 0 1.5px 8px rgba(0,0,0,0.10);
-}
-body.dark-theme #auth-section h2, body.dark-theme #comments-section h2 {
-  color: #a5b4fc;
-}
-body.dark-theme #auth-section button, body.dark-theme #logout-btn, body.dark-theme #login-btn, body.dark-theme #comment-form button {
-  background: linear-gradient(90deg, #232b4d 0%, #2563eb 100%);
-  color: #fff;
-}
-body.dark-theme #auth-section button:hover, body.dark-theme #comment-form button:hover {
-  background: linear-gradient(90deg, #2563eb 0%, #232b4d 100%);
-}
-body.dark-theme #user-info {
-  color: #e0e7ff;
-}
-body.dark-theme #comment-input {
-  background: #23263a;
-  color: #e0e7ff;
-  border-color: #334155;
-}
-body.dark-theme #comment-input:focus {
-  border-color: #a5b4fc;
-}
-body.dark-theme #comments-list > div {
-  background: #23263a;
-  color: #e0e7ff;
-  border-color: #334155;
-}
-body.dark-theme #comments-list > div:hover {
-  background: #1e2233;
-}
-body.dark-theme #comments-list b {
-  color: #a5b4fc;
-}
-body.dark-theme #comments-list span {
-  color: #bfc9e6;
-} 
 
 @media (min-width: 900px) {
   .centered-sections {
     display: flex;
     flex-direction: row;
     justify-content: center;
-    align-items: stretch;
+    align-items: flex-start;
     gap: 2.5em;
     width: 100%;
     margin-top: 2.5em;
@@ -1788,44 +1782,29 @@ body.dark-theme #comments-list span {
     max-width: 480px;
     height: auto;
     align-self: stretch;
+    min-height: calc(5 * 4.2em + 80px);
   }
-} 
+}
 
-/* --- Секция оставить комментарий и сами комментарии зелёные --- */
-#comment-form {
-  background: #e6fae6;
-  border-radius: 14px;
-  box-shadow: 0 2px 12px rgba(34,197,94,0.08);
-  padding: 1.2em 1em 1em 1em;
-  margin-bottom: 1.5em;
-  border: 1.5px solid #b6e7b6;
-  transition: background 0.3s, box-shadow 0.3s, border 0.3s;
+body.dark-theme #auth-section, body.dark-theme #comments-section {
+  background: #181c2a;
+  box-shadow: 0 4px 32px rgba(38,99,235,0.18), 0 1.5px 8px rgba(0,0,0,0.10);
 }
-#comment-input {
-  background: #f6fff6;
-  border-color: #b6e7b6;
-  color: #222;
+body.dark-theme #auth-section h2, body.dark-theme #comments-section h2 {
+  color: #a5b4fc;
 }
-#comment-input:focus {
-  border-color: #22c55e;
-}
-#comment-form button {
-  background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+body.dark-theme #login-btn, body.dark-theme #logout-btn {
+  background: linear-gradient(90deg, #232b4d 0%, #2563eb 100%);
   color: #fff;
-  box-shadow: 0 2px 8px rgba(34,197,94,0.10);
 }
-#comment-form button:hover {
-  background: linear-gradient(90deg, #16a34a 0%, #22c55e 100%);
+body.dark-theme #login-btn:hover, body.dark-theme #logout-btn:hover {
+  background: linear-gradient(90deg, #2563eb 0%, #232b4d 100%);
 }
-#comments-list > div {
-  background: #e6fae6;
-  border: 1.5px solid #b6e7b6;
-  color: #1a3d1a;
-  box-shadow: 0 1.5px 8px rgba(34,197,94,0.06);
-  transition: background 0.3s, color 0.3s, border 0.3s;
+body.dark-theme #user-info {
+  color: #fff;
 }
-#comments-list > div:hover {
-  background: #d1f5d1;
+body.dark-theme .user-privacy-note {
+  color: #bfc9e6;
 }
 body.dark-theme #comment-form {
   background: #183c2a;
@@ -1853,20 +1832,21 @@ body.dark-theme #comments-list > div {
   color: #c7ffd7;
   box-shadow: 0 1.5px 8px rgba(34,197,94,0.13);
 }
-body.dark-theme #comments-list > div:hover {
-  background: #205c3a;
+body.dark-theme #comments-list b {
+  color: #a5b4fc;
+}
+body.dark-theme #comments-list span {
+  color: #bfc9e6;
 } 
 
-.user-privacy-note {
-  margin-top: 0.5em;
-  color: #888;
-  font-size: 0.98em;
-  text-align: center;
-  line-height: 1.4;
-  max-width: 320px;
-  margin-left: auto;
-  margin-right: auto;
+/* Фиксированная минимальная высота для 5 комментариев */
+@media (min-width: 320px) {
+  #comments-list {
+    min-height: calc(5 * 4.2em);
+  }
 }
-body.dark-theme .user-privacy-note {
-  color: #bfc9e6;
+@media (max-width: 600px) {
+  #comments-list {
+    min-height: calc(5 * 3.2em);
+  }
 } 
