@@ -865,12 +865,140 @@ setInterval(setHeroBackgroundByTime, 60000);
     const gyroBtn = document.getElementById('get-orientation');
     if (!toggle) return;
     let enabled = false;
-    let rafId = null;
     let isMobile = /Mobi|Android/i.test(navigator.userAgent);
     let gyroActive = false;
     let lastGyro = {beta: 0, gamma: 0};
     const cards = () => Array.from(document.querySelectorAll('.service__card, .stat'));
 
+    // --- Оптимизация: глобальный цикл для отражений ---
+    let reflectionRafId = null;
+    let pendingMouse = null;
+    let pendingGyro = null;
+    // Кэш последних значений для каждой карточки
+    const cardCache = new WeakMap();
+    function updateReflections() {
+        if (!enabled) return;
+        const all = cards();
+        if (pendingMouse) {
+            const {x, y} = pendingMouse;
+            all.forEach(card => {
+                const rect = card.getBoundingClientRect();
+                const cx = rect.left + rect.width/2;
+                const cy = rect.top + rect.height/2;
+                const screenCenterX = window.innerWidth / 2;
+                const screenCenterY = window.innerHeight / 2;
+                const blend = 0.5;
+                const targetX = x * (1-blend) + screenCenterX * blend;
+                const targetY = y * (1-blend) + screenCenterY * blend;
+                const dx = targetX - cx;
+                const dy = targetY - cy;
+                const jitter = (Math.random()-0.5) * 5;
+                const angle = Math.atan2(dy, dx) * 180 / Math.PI + 180 + jitter;
+                let brightness = 1;
+                const {minDist, minDistText, minDistWood} = obstructionDistance(card, x, y, all);
+                if (minDist !== Infinity) {
+                    brightness = Math.max(0.1, Math.min(0.7, minDist/200));
+                } else if (minDistWood !== Infinity) {
+                    brightness = Math.max(0.18, Math.min(0.6, minDistWood/200));
+                } else if (minDistText !== Infinity) {
+                    brightness = Math.max(0.3, Math.min(0.85, minDistText/200));
+                }
+                // Кэшируем и обновляем только если изменилось
+                let cache = cardCache.get(card) || {};
+                if (cache.angle !== angle || cache.brightness !== brightness) {
+                    card.style.setProperty('--reflection-angle', `${angle}deg`);
+                    card.style.setProperty('--reflection-brightness', brightness.toFixed(2));
+                    card.classList.add('with-reflection');
+                    cardCache.set(card, {angle, brightness});
+                }
+            });
+            setOverlayGlass(x, y);
+            setWoodReflection(x, y);
+            pendingMouse = null;
+        }
+        if (pendingGyro) {
+            const {alpha, beta, gamma} = pendingGyro;
+            all.forEach(card => {
+                let orientation = (Math.abs(beta) > Math.abs(gamma)) ? 'portrait' : 'landscape';
+                let angle, brightness;
+                if (orientation === 'portrait') {
+                    angle = 90 + gamma + alpha + beta/2;
+                    brightness = 1 - Math.abs(beta)/120;
+                } else {
+                    angle = 90 + beta + alpha + gamma/2;
+                    brightness = 1 - Math.abs(gamma)/90;
+                }
+                brightness = Math.max(0.15, Math.min(1, brightness));
+                let cache = cardCache.get(card) || {};
+                if (cache.angle !== angle || cache.brightness !== brightness) {
+                    card.style.setProperty('--reflection-angle', `${angle}deg`);
+                    card.style.setProperty('--reflection-brightness', brightness.toFixed(2));
+                    card.classList.add('with-reflection');
+                    cardCache.set(card, {angle, brightness});
+                }
+            });
+            // overlay и wood-reflection
+            const overlay = document.querySelector('.overlay-glass');
+            let angle;
+            let orientation = (Math.abs(beta) > Math.abs(gamma)) ? 'portrait' : 'landscape';
+            if (orientation === 'portrait') {
+                angle = 90 + gamma + alpha + beta/2;
+            } else {
+                angle = 90 + beta + alpha + gamma/2;
+            }
+            const jitter = (Math.random()-0.5) * 5;
+            angle += jitter;
+            if (overlay) {
+                overlay.style.setProperty('--overlay-reflection-angle', `${angle}deg`);
+                overlay.style.setProperty('--overlay-reflection-brightness', 0.45);
+            }
+            const images = document.querySelectorAll('.wood-reflection');
+            images.forEach(img => {
+                img.classList.add('with-wood-reflection');
+                img.style.setProperty('--wood-reflection-angle', `${angle}deg`);
+                img.style.setProperty('--wood-reflection-brightness', 0.22);
+            });
+            pendingGyro = null;
+        }
+        reflectionRafId = null;
+    }
+    function scheduleReflectionUpdate() {
+        if (!reflectionRafId) {
+            reflectionRafId = requestAnimationFrame(updateReflections);
+        }
+    }
+    function onMouseMove(e) {
+        pendingMouse = {x: e.clientX, y: e.clientY};
+        scheduleReflectionUpdate();
+    }
+    function onGyro(e) {
+        pendingGyro = {alpha: e.alpha, beta: e.beta, gamma: e.gamma};
+        scheduleReflectionUpdate();
+        // gyro-info (оставляем как есть)
+        lastGyro = {beta: e.beta, gamma: e.gamma, alpha: e.alpha};
+        const info = document.getElementById('gyro-info');
+        if (info) {
+            info.style.display = '';
+            document.getElementById('alpha').textContent = e.alpha ? e.alpha.toFixed(1) + '°' : '–';
+            document.getElementById('beta').textContent = e.beta ? e.beta.toFixed(1) + '°' : '–';
+            document.getElementById('gamma').textContent = e.gamma ? e.gamma.toFixed(1) + '°' : '–';
+            document.getElementById('orientation').textContent = (Math.abs(e.beta) > Math.abs(e.gamma)) ? 'portrait' : 'landscape';
+        }
+    }
+    function enableGyro() {
+        if (gyroActive) return;
+        window.addEventListener('deviceorientation', onGyro);
+        gyroActive = true;
+        const info = document.getElementById('gyro-info');
+        if (info) info.style.display = '';
+    }
+    function disableGyro() {
+        if (!gyroActive) return;
+        window.removeEventListener('deviceorientation', onGyro);
+        gyroActive = false;
+        const info = document.getElementById('gyro-info');
+        if (info) info.style.display = 'none';
+    }
     // === Кэш препятствий для блика ===
     let obstaclesCache = null;
     function updateObstaclesCache() {
@@ -1139,113 +1267,6 @@ setInterval(setHeroBackgroundByTime, 60000);
             img.style.removeProperty('--wood-reflection-brightness');
         });
     }
-    function onMouseMove(e) {
-        const mouseX = e.clientX;
-        const mouseY = e.clientY;
-        const all = cards();
-        if (rafId) cancelAnimationFrame(rafId);
-        rafId = requestAnimationFrame(() => {
-            all.forEach(card => setReflection(card, mouseX, mouseY, all));
-            setOverlayGlass(mouseX, mouseY);
-            setWoodReflection(mouseX, mouseY);
-        });
-    }
-    function onGyro(e) {
-        lastGyro = {beta: e.beta, gamma: e.gamma, alpha: e.alpha};
-        cards().forEach(card => setReflectionGyro(card, e.alpha, e.beta, e.gamma));
-        // Для overlay-glass: угол блика зависит от beta/gamma
-        const overlay = document.querySelector('.overlay-glass');
-        let angle;
-        let orientation = (Math.abs(e.beta) > Math.abs(e.gamma)) ? 'portrait' : 'landscape';
-        if (orientation === 'portrait') {
-            angle = 90 + e.gamma + e.alpha + e.beta/2;
-        } else {
-            angle = 90 + e.beta + e.alpha + e.gamma/2;
-        }
-        const jitter = (Math.random()-0.5) * 5;
-        angle += jitter;
-        if (overlay) {
-            overlay.style.setProperty('--overlay-reflection-angle', `${angle}deg`);
-            overlay.style.setProperty('--overlay-reflection-brightness', 0.45);
-        }
-        // Для wood-reflection
-        const images = document.querySelectorAll('.wood-reflection');
-        images.forEach(img => {
-            img.classList.add('with-wood-reflection');
-            img.style.setProperty('--wood-reflection-angle', `${angle}deg`);
-            img.style.setProperty('--wood-reflection-brightness', 0.22);
-        });
-        // Выводим значения в #gyro-info
-        const info = document.getElementById('gyro-info');
-        if (info) {
-            info.style.display = '';
-            document.getElementById('alpha').textContent = e.alpha ? e.alpha.toFixed(1) + '°' : '–';
-            document.getElementById('beta').textContent = e.beta ? e.beta.toFixed(1) + '°' : '–';
-            document.getElementById('gamma').textContent = e.gamma ? e.gamma.toFixed(1) + '°' : '–';
-            document.getElementById('orientation').textContent = (Math.abs(e.beta) > Math.abs(e.gamma)) ? 'portrait' : 'landscape';
-        }
-    }
-    function enableGyro() {
-        if (gyroActive) return;
-        window.addEventListener('deviceorientation', onGyro);
-        gyroActive = true;
-        const info = document.getElementById('gyro-info');
-        if (info) info.style.display = '';
-    }
-    function disableGyro() {
-        if (!gyroActive) return;
-        window.removeEventListener('deviceorientation', onGyro);
-        gyroActive = false;
-        const info = document.getElementById('gyro-info');
-        if (info) info.style.display = 'none';
-    }
-    // === Кэш плиток по зонам ===
-    let tileZoneCache = null;
-    function updateTileZoneCache() {
-        tileZoneCache = {
-            hero: Array.from(document.querySelectorAll('.hero .service__card, .hero .stat')),
-            about: Array.from(document.querySelectorAll('.about .service__card, .about .stat')),
-            services: Array.from(document.querySelectorAll('.services .service__card, .services .stat'))
-        };
-    }
-    // Throttle для обновления кэша и классов
-    let tileZoneUpdatePending = false;
-    function scheduleTileZoneUpdate() {
-        if (tileZoneUpdatePending) return;
-        tileZoneUpdatePending = true;
-        requestAnimationFrame(() => {
-            updateTileZoneCache();
-            if (document.body.classList.contains('with-overlay-glass')) setTileZoneClasses();
-            tileZoneUpdatePending = false;
-        });
-    }
-    window.addEventListener('resize', scheduleTileZoneUpdate);
-    window.addEventListener('scroll', scheduleTileZoneUpdate, true);
-    // === END Кэш ===
-    function setTileZoneClasses() {
-        if (!tileZoneCache) updateTileZoneCache();
-        // Hero: .matte-tile
-        tileZoneCache.hero.forEach(el => {
-            if (!el.classList.contains('matte-tile')) el.classList.add('matte-tile');
-            el.classList.remove('metallic-tile', 'water-tile');
-        });
-        // About: .metallic-tile
-        tileZoneCache.about.forEach(el => {
-            if (!el.classList.contains('metallic-tile')) el.classList.add('metallic-tile');
-            el.classList.remove('matte-tile', 'water-tile');
-        });
-        // Services: .water-tile
-        tileZoneCache.services.forEach(el => {
-            if (!el.classList.contains('water-tile')) el.classList.add('water-tile');
-            el.classList.remove('matte-tile', 'metallic-tile');
-        });
-    }
-    function clearTileZoneClasses() {
-        if (!tileZoneCache) updateTileZoneCache();
-        [...tileZoneCache.hero, ...tileZoneCache.about, ...tileZoneCache.services].forEach(el => {
-            el.classList.remove('matte-tile', 'metallic-tile', 'water-tile');
-        });
-    }
     function enable() {
         enabled = true;
         if (isMobile) {
@@ -1297,6 +1318,8 @@ setInterval(setHeroBackgroundByTime, 60000);
         if (services) services.classList.remove('water-service');
         // Убрать зональные классы с плит
         clearTileZoneClasses();
+        // --- Очищаем кэш ---
+        cardCache.clear();
     }
     // --- Делаем функции доступными глобально для управления из других частей кода ---
     window.__reflectionEnable = enable;
@@ -1368,3 +1391,102 @@ function positionImageMarkers() {
 window.addEventListener('DOMContentLoaded', positionImageMarkers);
 window.addEventListener('resize', positionImageMarkers);
 window.addEventListener('load', positionImageMarkers); 
+
+// === Firebase config и логика аутентификации/комментариев ===
+// Конфиг теперь берём из window.FIREBASE_CONFIG, который подключается отдельным файлом (не коммитить в git)
+const firebaseConfig = window.FIREBASE_CONFIG;
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+const authSection = document.getElementById('auth-section');
+const loginBtn = document.getElementById('login-btn');
+const logoutBtn = document.getElementById('logout-btn');
+const userInfo = document.getElementById('user-info');
+const commentsSection = document.getElementById('comments-section');
+const commentForm = document.getElementById('comment-form');
+const commentInput = document.getElementById('comment-input');
+const commentsList = document.getElementById('comments-list');
+const privacyNote = document.querySelector('.user-privacy-note');
+
+function showAuthSection(show) {
+  if (authSection) authSection.style.display = show ? '' : 'none';
+}
+function showCommentsSection(show) {
+  if (commentsSection) commentsSection.style.display = show ? '' : 'none';
+}
+
+// Google Auth
+if (loginBtn) {
+  loginBtn.onclick = function() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider);
+  };
+}
+if (logoutBtn) {
+  logoutBtn.onclick = function() {
+    auth.signOut();
+  };
+}
+
+// Auth state
+if (auth) {
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      showAuthSection(true);
+      showCommentsSection(true);
+      loginBtn.style.display = 'none';
+      logoutBtn.style.display = '';
+      userInfo.innerHTML = `<b>${user.displayName}</b>`;
+      if (privacyNote) privacyNote.style.display = '';
+      loadComments();
+    } else {
+      showAuthSection(true);
+      showCommentsSection(false);
+      loginBtn.style.display = '';
+      logoutBtn.style.display = 'none';
+      userInfo.innerHTML = '';
+      if (privacyNote) privacyNote.style.display = 'none';
+    }
+  });
+}
+
+// Добавление комментария
+if (commentForm) {
+  commentForm.onsubmit = async function(e) {
+    e.preventDefault();
+    const user = auth.currentUser;
+    const text = commentInput.value.trim();
+    if (!user || !text) return;
+    await db.collection('comments').add({
+      text,
+      uid: user.uid,
+      name: user.displayName,
+      email: user.email,
+      created: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    commentInput.value = '';
+    loadComments();
+  };
+}
+
+// Загрузка комментариев
+async function loadComments() {
+  if (!commentsList) return;
+  commentsList.innerHTML = '<em>Загрузка...</em>';
+  const snap = await db.collection('comments').orderBy('created', 'desc').limit(5).get();
+  if (snap.empty) {
+    commentsList.innerHTML = '<em>Комментариев пока нет.</em>';
+    return;
+  }
+  commentsList.innerHTML = '';
+  snap.forEach(doc => {
+    const c = doc.data();
+    const date = c.created && c.created.toDate ? c.created.toDate().toLocaleString() : '';
+    const el = document.createElement('div');
+    el.style = 'border-bottom:1px solid #eee;padding:0.5em 0;';
+    el.innerHTML = `<b>${c.name || 'Аноним'}</b> <span style="color:#888;font-size:0.9em;">${date}</span><br>${c.text}`;
+    commentsList.appendChild(el);
+  });
+} 

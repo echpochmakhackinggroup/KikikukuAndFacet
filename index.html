@@ -10,6 +10,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollToPlugin.min.js"></script>
     
+    <!-- Firebase App (the core Firebase SDK) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <!-- Firebase Auth -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <!-- Firebase Firestore -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <!-- Firebase config (локальный, не коммитить) -->
+    <script src="firebase-config.js"></script>
 
 </head>
 <body>
@@ -265,6 +273,25 @@
                 
             </div>
         </div>
+    </div>
+
+    <!-- Firebase Auth UI + Комментарии в одном контейнере -->
+    <div class="centered-sections">
+      <div id="auth-section" style="max-width:400px;margin:2em auto;display:none;">
+        <h2>Вход или регистрация</h2>
+        <button id="login-btn">Войти через Google</button>
+        <button id="logout-btn" style="display:none;">Выйти</button>
+        <div id="user-info" style="margin-top:1em;"></div>
+        <div class="user-privacy-note" style="display:none;">Мы не собираем вашу информацию в злых целях</div>
+      </div>
+      <div id="comments-section" style="max-width:600px;margin:2em auto;display:none;">
+        <h2>Пожелания и доработки</h2>
+        <form id="comment-form" style="margin-bottom:1em;">
+          <textarea id="comment-input" rows="3" style="width:100%;" placeholder="Ваше пожелание..."></textarea>
+          <button type="submit">Оставить комментарий</button>
+        </form>
+        <div id="comments-list"></div>
+      </div>
     </div>
 
     <!-- Гироскоп: значения для мобильных -->

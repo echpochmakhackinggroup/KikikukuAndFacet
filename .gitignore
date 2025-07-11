@@ -57,3 +57,4 @@ node_modules/
 # Temporary files
 *.tmp
 *.temp 
+firebase-config.js 
