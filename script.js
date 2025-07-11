@@ -814,9 +814,21 @@ setInterval(setHeroBackgroundByTime, 60000);
 (function setupExperimentalModal() {
     const btn = document.querySelector('.big-modal-btn[data-modal="experimental"]');
     if (!btn) return;
+    // --- Добавлено: флаг для временного отключения отражений ---
+    let wasReflectionEnabled = false;
     btn.addEventListener('click', () => {
         const modal = document.getElementById('modal-experimental');
         if (modal) {
+            // --- Отключаем отражения на мобильных при открытии модалки ---
+            const toggle = document.getElementById('reflection-toggle');
+            const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+            if (toggle && toggle.checked && isMobile) {
+                // Найти функцию disable из setupReflectionEffect
+                if (window.__reflectionDisable) window.__reflectionDisable();
+                wasReflectionEnabled = true;
+            } else {
+                wasReflectionEnabled = false;
+            }
             modal.style.display = 'flex';
             gsap.fromTo(modal, { opacity: 0 }, { opacity: 1, duration: 0.4, ease: 'power3.out' });
             gsap.fromTo(modal.querySelector('.modal__content'),
@@ -824,6 +836,25 @@ setInterval(setHeroBackgroundByTime, 60000);
                 { scale: 1, opacity: 1, y: 0, duration: 0.5, ease: 'back.out(1.2)', delay: 0.1 }
             );
             document.body.style.overflow = 'hidden';
+            // --- При закрытии модалки возвращаем отражения, если нужно ---
+            const closeBtn = modal.querySelector('.modal__close');
+            const restoreReflections = () => {
+                if (wasReflectionEnabled && toggle && isMobile) {
+                    if (window.__reflectionEnable) window.__reflectionEnable();
+                }
+            };
+            if (closeBtn) {
+                closeBtn.addEventListener('click', restoreReflections, { once: true });
+            }
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) restoreReflections();
+            }, { once: true });
+            document.addEventListener('keydown', function escHandler(e) {
+                if (e.key === 'Escape' && modal.style.display === 'flex') {
+                    restoreReflections();
+                    document.removeEventListener('keydown', escHandler);
+                }
+            });
         }
     });
 })();
@@ -1267,6 +1298,9 @@ setInterval(setHeroBackgroundByTime, 60000);
         // Убрать зональные классы с плит
         clearTileZoneClasses();
     }
+    // --- Делаем функции доступными глобально для управления из других частей кода ---
+    window.__reflectionEnable = enable;
+    window.__reflectionDisable = disable;
     toggle.addEventListener('change', () => {
         if (toggle.checked) enable();
         else disable();
