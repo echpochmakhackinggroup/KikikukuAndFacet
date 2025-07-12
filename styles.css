@@ -2287,6 +2287,357 @@ body.dark-theme #user-name {
   align-items: center;
   margin: 2em 0;
   min-height: 200px; /* Обеспечиваем место для большой аватарки */
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+#user-avatar-container:hover {
+  transform: scale(1.05);
+}
+
+#user-avatar-container:active {
+  transform: scale(0.95);
+}
+
+/* Конструктор аватарки */
+.avatar-constructor {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.avatar-preview {
+  text-align: center;
+}
+
+.avatar-preview h3 {
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+body.dark-theme .avatar-preview h3 {
+  color: #fff;
+}
+
+#avatar-preview-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 15px;
+  padding: 2rem;
+}
+
+body.dark-theme #avatar-preview-container {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.avatar-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.avatar-settings h3 {
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+body.dark-theme .avatar-settings h3 {
+  color: #fff;
+}
+
+.setting-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.setting-group label {
+  font-weight: 600;
+  color: #555;
+  font-size: 0.9rem;
+}
+
+body.dark-theme .setting-group label {
+  color: #ccc;
+}
+
+.color-picker {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.color-btn {
+  width: 100%;
+  height: 40px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  color: white;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.color-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.color-btn.active {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
+}
+
+.color-btn[data-color="W"] {
+  color: #333;
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+.shape-picker {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.shape-btn {
+  padding: 0.8rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+body.dark-theme .shape-btn {
+  background: #374151;
+  border-color: #4b5563;
+  color: #fff;
+}
+
+.shape-btn:hover {
+  border-color: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+}
+
+.shape-btn.active {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: white;
+}
+
+.avatar-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.action-btn {
+  flex: 1;
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.action-btn.primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.action-btn.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+}
+
+.action-btn.secondary {
+  background: #f3f4f6;
+  color: #374151;
+  border: 2px solid #e5e7eb;
+}
+
+body.dark-theme .action-btn.secondary {
+  background: #374151;
+  color: #fff;
+  border-color: #4b5563;
+}
+
+.action-btn.secondary:hover {
+  background: #e5e7eb;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+body.dark-theme .action-btn.secondary:hover {
+  background: #4b5563;
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 768px) {
+  .avatar-constructor {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .color-picker {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .shape-picker {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .avatar-actions {
+    flex-direction: column;
+  }
+  
+  #avatar-preview-container {
+    min-height: 150px;
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .color-picker {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .color-btn {
+    height: 35px;
+    font-size: 0.8rem;
+  }
+  
+  .shape-btn {
+    padding: 0.6rem;
+    font-size: 0.9rem;
+  }
+  
+  .action-btn {
+    padding: 0.7rem 1rem;
+    font-size: 0.9rem;
+  }
+}
+
+/* Уведомления */
+.notification-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10000;
+  pointer-events: none;
+}
+
+.notification {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+  margin-bottom: 10px;
+  max-width: 300px;
+  font-weight: 500;
+  transform: translateX(100%);
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  pointer-events: auto;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.notification.show {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.notification.success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 8px 32px rgba(16, 185, 129, 0.3);
+}
+
+.notification.error {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  box-shadow: 0 8px 32px rgba(239, 68, 68, 0.3);
+}
+
+.notification.warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  box-shadow: 0 8px 32px rgba(245, 158, 11, 0.3);
+}
+
+.notification::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.notification .notification-icon {
+  margin-right: 8px;
+  font-size: 1.1em;
+}
+
+.notification .notification-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.notification .notification-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+/* Темная тема для уведомлений */
+body.dark-theme .notification {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* Адаптивность для мобильных */
+@media (max-width: 768px) {
+  .notification-container {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+  }
+  
+  .notification {
+    max-width: none;
+    margin-bottom: 8px;
+    padding: 0.8rem 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .notification {
+    padding: 0.7rem 1rem;
+    font-size: 0.9rem;
+  }
 }
 
 /* Comment item styles */

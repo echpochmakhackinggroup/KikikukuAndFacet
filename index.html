@@ -328,7 +328,7 @@
         <div id="user-name" style="width:100%;text-align:center;font-size:1.2em;font-weight:bold;margin:2.2em 0 1.2em 0;display:none;"></div>
         
         <!-- Аватарка по центру -->
-        <div id="user-avatar-container" style="width:100%;text-align:center;position:absolute;top:50%;left:50%;transform:translate(-50%, -50%);display:none;"></div>
+        <div id="user-avatar-container" style="width:100%;text-align:center;position:absolute;top:50%;left:50%;transform:translate(-50%, -50%);display:none;cursor:pointer;"></div>
         
         <!-- Секция авторизации -->
         <div id="auth-section" style="width:60%;max-width:280px;text-align:center;position:absolute;top:50%;left:50%;transform:translate(-50%, -50%);">
@@ -345,6 +345,79 @@
           <span class="nav-experimental-link" data-modal="experimental" style="cursor:pointer;">Экспериментальные функции</span>
         </div>
       </div>
+    </div>
+
+    <!-- Модальное окно профиля пользователя -->
+    <div id="modal-profile" class="modal">
+        <div class="modal__content">
+            <span class="modal__close">&times;</span>
+            <div class="modal__header">
+                <div class="modal__icon">👤</div>
+                <h2>Конструктор аватарки</h2>
+            </div>
+            <div class="modal__body">
+                <div class="avatar-constructor">
+                    <!-- Предварительный просмотр аватарки -->
+                    <div class="avatar-preview">
+                        <h3>Предварительный просмотр</h3>
+                        <div id="avatar-preview-container"></div>
+                    </div>
+                    
+                    <!-- Настройки аватарки -->
+                    <div class="avatar-settings">
+                        <h3>Настройки</h3>
+                        
+                        <!-- Выбор цвета фона -->
+                        <div class="setting-group background-color-group">
+                            <label>Цвет фона:</label>
+                            <div class="color-picker">
+                                <button class="color-btn background-color-btn" data-color="R" style="background-color: #ff4444;">R</button>
+                                <button class="color-btn background-color-btn" data-color="G" style="background-color: #44ff44;">G</button>
+                                <button class="color-btn background-color-btn" data-color="B" style="background-color: #4444ff;">B</button>
+                                <button class="color-btn background-color-btn" data-color="Y" style="background-color: #ffff44;">Y</button>
+                                <button class="color-btn background-color-btn" data-color="P" style="background-color: #ff44ff;">P</button>
+                                <button class="color-btn background-color-btn" data-color="C" style="background-color: #44ffff;">C</button>
+                                <button class="color-btn background-color-btn" data-color="O" style="background-color: #ff8844;">O</button>
+                                <button class="color-btn background-color-btn" data-color="W" style="background-color: #ffffff;">W</button>
+                                <button class="color-btn background-color-btn" data-color="K" style="background-color: #000000;">K</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Выбор формы -->
+                        <div class="setting-group shape-group">
+                            <label>Форма:</label>
+                            <div class="shape-picker">
+                                <button class="shape-btn" data-shape="S">Квадрат</button>
+                                <button class="shape-btn" data-shape="C">Круг</button>
+                                <button class="shape-btn" data-shape="D">Ромб</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Выбор цвета формы -->
+                        <div class="setting-group shape-color-group">
+                            <label>Цвет формы:</label>
+                            <div class="color-picker">
+                                <button class="color-btn shape-color-btn" data-color="R" style="background-color: #ff4444;">R</button>
+                                <button class="color-btn shape-color-btn" data-color="G" style="background-color: #44ff44;">G</button>
+                                <button class="color-btn shape-color-btn" data-color="B" style="background-color: #4444ff;">B</button>
+                                <button class="color-btn shape-color-btn" data-color="Y" style="background-color: #ffff44;">Y</button>
+                                <button class="color-btn shape-color-btn" data-color="P" style="background-color: #ff44ff;">P</button>
+                                <button class="color-btn shape-color-btn" data-color="C" style="background-color: #44ffff;">C</button>
+                                <button class="color-btn shape-color-btn" data-color="O" style="background-color: #ff8844;">O</button>
+                                <button class="color-btn shape-color-btn" data-color="W" style="background-color: #ffffff;">W</button>
+                                <button class="color-btn shape-color-btn" data-color="K" style="background-color: #000000;">K</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Кнопки действий -->
+                        <div class="avatar-actions">
+                            <button id="random-avatar-btn" class="action-btn secondary">Случайная аватарка</button>
+                            <button id="save-avatar-btn" class="action-btn primary">Сохранить аватарку</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Комментарии и авторизация -->
@@ -374,6 +447,9 @@
             <button id="toggle-dark-theme" class="theme-toggle-btn">🌙 Тёмная тема</button>
         </div>
     </footer>
+
+    <!-- Уведомления -->
+    <div id="notification-container" class="notification-container"></div>
 
     <script src="script.js"></script>
 </body>

@@ -1101,6 +1101,12 @@ auth.onAuthStateChanged(user => {
       privacyNoteContainer.appendChild(privacyNote);
       privacyNote.style.display = '';
     }
+    
+    // Показываем уведомление о входе
+    if (user && !customSession) {
+      const userName = user.displayName || user.email || 'Пользователь';
+      showNotification(`Добро пожаловать, ${userName}! 👋`, 'success', 3000);
+    }
   } else {
     // Никто не вошёл
     if (userInfo) {
@@ -1295,9 +1301,14 @@ authTabs.forEach(tab => {
 
 // Функция для показа сообщений
 function showAuthMessage(message, type) {
+  // Показываем сообщение в форме авторизации
   authMessage.textContent = message;
   authMessage.className = `auth-message ${type}`;
   authMessage.style.display = 'block';
+  
+  // Также показываем уведомление для лучшего UX
+  const notificationType = type === 'success' ? 'success' : type === 'error' ? 'error' : 'info';
+  showNotification(message, notificationType, 4000);
 }
 
 // Функция для хеширования пароля (простая реализация)
@@ -1354,6 +1365,11 @@ registerForm.onsubmit = async (e) => {
     
     showAuthMessage('Регистрация успешна! Теперь вы можете войти', 'success');
     
+    // Показываем приветственное уведомление для нового пользователя
+    setTimeout(() => {
+      showNotification(`Аккаунт создан! Добро пожаловать, ${username}! 🎉`, 'success', 4000);
+    }, 500);
+    
     // Переключаемся на форму входа
     document.querySelector('[data-tab="login"]').click();
     
@@ -1406,6 +1422,11 @@ loginForm.onsubmit = async (e) => {
     localStorage.setItem('customUserSession', JSON.stringify(sessionData));
     
     showAuthMessage('Вход выполнен успешно!', 'success');
+    
+    // Показываем приветственное уведомление
+    setTimeout(() => {
+      showNotification(`Добро пожаловать, ${username}! 👋`, 'success', 4000);
+    }, 500);
     
     // Закрываем модальное окно
     setTimeout(async () => {
@@ -2118,4 +2139,372 @@ document.querySelector('.nav-menu-link')?.addEventListener('click', openSideMenu
 document.querySelector('.side-menu__close')?.addEventListener('click', closeSideMenu);
 sideMenu?.addEventListener('click', function(e) {
   if (e.target === sideMenu) closeSideMenu();
-}); 
+});
+
+// Конструктор аватарки
+let currentAvatarCode = 'RSG'; // Дефолтная аватарка
+let currentUserUid = null;
+
+// Система уведомлений
+function showNotification(message, type = 'info', duration = 4000) {
+  const container = document.getElementById('notification-container');
+  if (!container) return;
+  
+  const notification = document.createElement('div');
+  notification.className = `notification ${type}`;
+  
+  const icons = {
+    success: '✅',
+    error: '❌',
+    warning: '⚠️',
+    info: 'ℹ️'
+  };
+  
+  notification.innerHTML = `
+    <span class="notification-icon">${icons[type] || icons.info}</span>
+    <span class="notification-text">${message}</span>
+    <button class="notification-close" onclick="this.parentElement.remove()">×</button>
+  `;
+  
+  container.appendChild(notification);
+  
+  // Анимация появления
+  setTimeout(() => {
+    notification.classList.add('show');
+  }, 10);
+  
+  // Автоматическое скрытие
+  if (duration > 0) {
+    setTimeout(() => {
+      hideNotification(notification);
+    }, duration);
+  }
+  
+  // Клик для закрытия
+  notification.addEventListener('click', (e) => {
+    if (e.target !== notification.querySelector('.notification-close')) {
+      hideNotification(notification);
+    }
+  });
+}
+
+function hideNotification(notification) {
+  notification.classList.remove('show');
+  setTimeout(() => {
+    if (notification.parentElement) {
+      notification.remove();
+    }
+  }, 400);
+}
+
+// Функция для обновления аватарок в комментариях
+async function updateAvatarsInComments(userUid, newAvatarCode) {
+  try {
+    const commentsList = document.getElementById('comments-list');
+    if (!commentsList) return;
+    
+    // Находим все комментарии текущего пользователя
+    const commentItems = Array.from(commentsList.children);
+    
+    for (const commentItem of commentItems) {
+      // Проверяем, принадлежит ли комментарий текущему пользователю
+      const userNameElement = commentItem.querySelector('b');
+      if (!userNameElement) continue;
+      
+      const userName = userNameElement.textContent;
+      
+      // Определяем, принадлежит ли комментарий текущему пользователю
+      let isCurrentUserComment = false;
+      
+      if (userUid.startsWith('custom_')) {
+        // Кастомный пользователь
+        const customSession = JSON.parse(localStorage.getItem('customUserSession') || 'null');
+        if (customSession && customSession.username === userName) {
+          isCurrentUserComment = true;
+        }
+      } else {
+        // Google пользователь
+        const currentUser = auth.currentUser;
+        if (currentUser && (currentUser.displayName === userName || currentUser.email === userName)) {
+          isCurrentUserComment = true;
+        }
+      }
+      
+      if (isCurrentUserComment) {
+        // Обновляем аватарку в комментарии
+        const avatarContainer = commentItem.querySelector('div[style*="position: absolute"]');
+        if (avatarContainer) {
+          // Очищаем старую аватарку
+          avatarContainer.innerHTML = '';
+          
+          // Создаем новую аватарку
+          const newAvatarElement = createAvatarElement(newAvatarCode, 24);
+          avatarContainer.appendChild(newAvatarElement);
+          
+          // Добавляем анимацию обновления
+          newAvatarElement.style.transform = 'scale(0)';
+          newAvatarElement.style.transition = 'transform 0.3s ease';
+          setTimeout(() => {
+            newAvatarElement.style.transform = 'scale(1)';
+          }, 10);
+        }
+      }
+    }
+    
+    console.log('Аватарки в комментариях обновлены для пользователя:', userUid);
+    
+  } catch (error) {
+    console.error('Ошибка при обновлении аватарок в комментариях:', error);
+  }
+}
+
+// Функция для обновления предварительного просмотра аватарки
+function updateAvatarPreview() {
+  const previewContainer = document.getElementById('avatar-preview-container');
+  console.log('Обновление предварительного просмотра:', currentAvatarCode);
+  if (previewContainer) {
+    previewContainer.innerHTML = '';
+    const avatarElement = createAvatarElement(currentAvatarCode, 120);
+    previewContainer.appendChild(avatarElement);
+    console.log('Аватарка обновлена в предварительном просмотре');
+  } else {
+    console.log('Контейнер предварительного просмотра не найден');
+  }
+}
+
+// Функция для обновления активных кнопок
+function updateActiveButtons() {
+  const color1 = currentAvatarCode[0];
+  const shape = currentAvatarCode[1];
+  const color2 = currentAvatarCode[2];
+  
+  console.log('Обновление кнопок:', { color1, shape, color2, currentAvatarCode });
+  
+  // Обновляем активные кнопки цветов фона
+  document.querySelectorAll('.background-color-btn').forEach(btn => {
+    const isActive = btn.dataset.color === color2;
+    btn.classList.toggle('active', isActive);
+    console.log('Кнопка фона:', btn.dataset.color, 'активна:', isActive);
+  });
+  
+  // Обновляем активные кнопки форм
+  document.querySelectorAll('.shape-btn').forEach(btn => {
+    const isActive = btn.dataset.shape === shape;
+    btn.classList.toggle('active', isActive);
+    console.log('Кнопка формы:', btn.dataset.shape, 'активна:', isActive);
+  });
+  
+  // Обновляем активные кнопки цветов формы
+  document.querySelectorAll('.shape-color-btn').forEach(btn => {
+    const isActive = btn.dataset.color === color1;
+    btn.classList.toggle('active', isActive);
+    console.log('Кнопка цвета формы:', btn.dataset.color, 'активна:', isActive);
+  });
+}
+
+// Функция для инициализации конструктора аватарки
+function initAvatarConstructor() {
+  const modal = document.getElementById('modal-profile');
+  if (!modal) return;
+  
+  // Получаем текущую аватарку пользователя
+  const session = JSON.parse(localStorage.getItem('customUserSession') || 'null');
+  if (session && session.isCustomUser) {
+    currentUserUid = `custom_${session.username}`;
+  } else if (auth.currentUser) {
+    currentUserUid = auth.currentUser.uid;
+  }
+  
+  // Загружаем текущую аватарку пользователя
+  if (currentUserUid) {
+    getUserAvatar(currentUserUid).then(avatarCode => {
+      currentAvatarCode = avatarCode;
+      updateAvatarPreview();
+      updateActiveButtons();
+    });
+  } else {
+    updateAvatarPreview();
+    updateActiveButtons();
+  }
+  
+  // Добавляем обработчики событий
+  addAvatarConstructorEventListeners();
+}
+
+// Функция для добавления обработчиков событий конструктора
+function addAvatarConstructorEventListeners() {
+  console.log('Добавление обработчиков событий конструктора');
+  
+  // Обработчики для кнопок цветов фона
+  const backgroundBtns = document.querySelectorAll('.background-color-btn');
+  console.log('Найдено кнопок цвета фона:', backgroundBtns.length);
+  backgroundBtns.forEach(btn => {
+    // Удаляем старые обработчики
+    btn.removeEventListener('click', handleBackgroundColorChange);
+    // Добавляем новый обработчик
+    btn.addEventListener('click', handleBackgroundColorChange);
+    console.log('Добавлен обработчик для кнопки цвета фона:', btn.dataset.color);
+  });
+  
+  // Обработчики для кнопок форм
+  const shapeBtns = document.querySelectorAll('.shape-btn');
+  console.log('Найдено кнопок форм:', shapeBtns.length);
+  shapeBtns.forEach(btn => {
+    // Удаляем старые обработчики
+    btn.removeEventListener('click', handleShapeChange);
+    // Добавляем новый обработчик
+    btn.addEventListener('click', handleShapeChange);
+    console.log('Добавлен обработчик для кнопки формы:', btn.dataset.shape);
+  });
+  
+  // Обработчики для кнопок цветов формы
+  const shapeColorBtns = document.querySelectorAll('.shape-color-btn');
+  console.log('Найдено кнопок цвета формы:', shapeColorBtns.length);
+  shapeColorBtns.forEach(btn => {
+    // Удаляем старые обработчики
+    btn.removeEventListener('click', handleShapeColorChange);
+    // Добавляем новый обработчик
+    btn.addEventListener('click', handleShapeColorChange);
+    console.log('Добавлен обработчик для кнопки цвета формы:', btn.dataset.color);
+  });
+  
+  // Обработчик для кнопки случайной аватарки
+  const randomBtn = document.getElementById('random-avatar-btn');
+  if (randomBtn) {
+    randomBtn.removeEventListener('click', handleRandomAvatar);
+    randomBtn.addEventListener('click', handleRandomAvatar);
+    console.log('Добавлен обработчик для кнопки случайной аватарки');
+  } else {
+    console.log('Кнопка случайной аватарки не найдена');
+  }
+  
+  // Обработчик для кнопки сохранения
+  const saveBtn = document.getElementById('save-avatar-btn');
+  if (saveBtn) {
+    saveBtn.removeEventListener('click', handleSaveAvatar);
+    saveBtn.addEventListener('click', handleSaveAvatar);
+    console.log('Добавлен обработчик для кнопки сохранения');
+  } else {
+    console.log('Кнопка сохранения не найдена');
+  }
+}
+
+// Обработчики событий
+function handleBackgroundColorChange(e) {
+  const newColor = e.target.dataset.color;
+  console.log('Изменение цвета фона:', newColor, 'старый код:', currentAvatarCode);
+  currentAvatarCode = currentAvatarCode[0] + currentAvatarCode[1] + newColor;
+  console.log('Новый код:', currentAvatarCode);
+  updateAvatarPreview();
+  updateActiveButtons();
+}
+
+function handleShapeChange(e) {
+  const newShape = e.target.dataset.shape;
+  console.log('Изменение формы:', newShape, 'старый код:', currentAvatarCode);
+  currentAvatarCode = currentAvatarCode[0] + newShape + currentAvatarCode[2];
+  console.log('Новый код:', currentAvatarCode);
+  updateAvatarPreview();
+  updateActiveButtons();
+}
+
+function handleShapeColorChange(e) {
+  const newColor = e.target.dataset.color;
+  console.log('Изменение цвета формы:', newColor, 'старый код:', currentAvatarCode);
+  currentAvatarCode = newColor + currentAvatarCode[1] + currentAvatarCode[2];
+  console.log('Новый код:', currentAvatarCode);
+  updateAvatarPreview();
+  updateActiveButtons();
+}
+
+function handleRandomAvatar() {
+  currentAvatarCode = generateRandomAvatarCode();
+  updateAvatarPreview();
+  updateActiveButtons();
+  showNotification('Сгенерирована новая аватарка! 🎲', 'info', 2000);
+}
+
+async function handleSaveAvatar() {
+  if (!currentUserUid) {
+    showNotification('Пожалуйста, войдите в систему для сохранения аватарки', 'warning', 5000);
+    return;
+  }
+  
+  try {
+    // Показываем уведомление о начале сохранения
+    showNotification('Сохранение аватарки...', 'info', 0);
+    
+    // Сохраняем аватарку в базу данных
+    await db.collection('avatarka').doc(currentUserUid).set({
+      code: currentAvatarCode,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    
+    // Обновляем аватарку в UI
+    const userAvatarContainer = document.getElementById('user-avatar-container');
+    if (userAvatarContainer) {
+      await updateUserAvatarInUI(currentUserUid, userAvatarContainer);
+    }
+    
+    // Обновляем аватарки в комментариях
+    await updateAvatarsInComments(currentUserUid, currentAvatarCode);
+    
+    // Удаляем уведомление о сохранении
+    const container = document.getElementById('notification-container');
+    if (container) {
+      const savingNotification = container.querySelector('.notification');
+      if (savingNotification) {
+        savingNotification.remove();
+      }
+    }
+    
+    // Показываем сообщение об успехе
+    showNotification('Аватарка сохранена! Изменения применятся позже 🔄', 'success', 4000);
+    
+    // Показываем дополнительное уведомление об обновлении комментариев
+    setTimeout(() => {
+      showNotification('Аватарки в комментариях также обновлены! 💬', 'info', 2500);
+    }, 1000);
+    
+    // Закрываем модальное окно
+    const modal = document.getElementById('modal-profile');
+    if (modal) {
+      closeModal(modal);
+    }
+    
+  } catch (error) {
+    console.error('Ошибка при сохранении аватарки:', error);
+    
+    // Удаляем уведомление о сохранении
+    const container = document.getElementById('notification-container');
+    if (container) {
+      const savingNotification = container.querySelector('.notification');
+      if (savingNotification) {
+        savingNotification.remove();
+      }
+    }
+    
+    showNotification('Ошибка при сохранении аватарки. Попробуйте позже.', 'error', 5000);
+  }
+}
+
+// Обработчик клика по аватарке пользователя
+document.getElementById('user-avatar-container')?.addEventListener('click', function() {
+  const modal = document.getElementById('modal-profile');
+  if (modal) {
+    modal.style.display = 'flex';
+    if (window.gsap) {
+      gsap.fromTo(modal, { opacity: 0 }, { opacity: 1, duration: 0.4, ease: 'power3.out' });
+      gsap.fromTo(modal.querySelector('.modal__content'),
+        { scale: 0.95, opacity: 0, y: 40 },
+        { scale: 1, opacity: 1, y: 0, duration: 0.5, ease: 'back.out(1.2)', delay: 0.1 }
+      );
+    }
+    document.body.style.overflow = 'hidden';
+    
+    // Инициализируем конструктор аватарки
+    setTimeout(initAvatarConstructor, 100);
+  }
+});
+
+ 
