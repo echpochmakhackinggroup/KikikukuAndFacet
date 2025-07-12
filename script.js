@@ -113,12 +113,15 @@ function createAvatarElement(avatarCode, size = 32) {
   // Создаем фигуру
   const shapeElement = document.createElement('div');
   
+  // Определяем размер фигуры - оптимальный размер для видимости
+  const shapeSize = actualSize * 0.6; // Уменьшаем с 0.7 до 0.6 (60% от размера аватара)
+  
   // Применяем форму
   switch (shape) {
     case 'S': // Square
       shapeElement.style.cssText = `
-        width: ${actualSize * 0.6}px;
-        height: ${actualSize * 0.6}px;
+        width: ${shapeSize}px;
+        height: ${shapeSize}px;
         background-color: ${avatarColors[color1]};
         position: absolute;
         top: 50%;
@@ -130,8 +133,8 @@ function createAvatarElement(avatarCode, size = 32) {
       break;
     case 'C': // Circle
       shapeElement.style.cssText = `
-        width: ${actualSize * 0.6}px;
-        height: ${actualSize * 0.6}px;
+        width: ${shapeSize}px;
+        height: ${shapeSize}px;
         background-color: ${avatarColors[color1]};
         position: absolute;
         top: 50%;
@@ -144,8 +147,8 @@ function createAvatarElement(avatarCode, size = 32) {
 
     case 'D': // Diamond
       shapeElement.style.cssText = `
-        width: ${actualSize * 0.6}px;
-        height: ${actualSize * 0.6}px;
+        width: ${shapeSize}px;
+        height: ${shapeSize}px;
         background-color: ${avatarColors[color1]};
         position: absolute;
         top: 50%;
@@ -158,8 +161,8 @@ function createAvatarElement(avatarCode, size = 32) {
     default:
       // Дефолтная фигура - круг
       shapeElement.style.cssText = `
-        width: ${actualSize * 0.6}px;
-        height: ${actualSize * 0.6}px;
+        width: ${shapeSize}px;
+        height: ${shapeSize}px;
         background-color: ${avatarColors[color1]};
         position: absolute;
         top: 50%;
@@ -2264,9 +2267,18 @@ function updateAvatarPreview() {
   console.log('Обновление предварительного просмотра:', currentAvatarCode);
   if (previewContainer) {
     previewContainer.innerHTML = '';
-    const avatarElement = createAvatarElement(currentAvatarCode, 120);
+    
+    // Определяем размер аватара в зависимости от размера экрана
+    let avatarSize = 120; // базовый размер для десктопа
+    if (window.innerWidth <= 480) {
+      avatarSize = 200; // большой размер для маленьких экранов
+    } else if (window.innerWidth <= 768) {
+      avatarSize = 180; // средний размер для планшетов
+    }
+    
+    const avatarElement = createAvatarElement(currentAvatarCode, avatarSize);
     previewContainer.appendChild(avatarElement);
-    console.log('Аватарка обновлена в предварительном просмотре');
+    console.log('Аватарка обновлена в предварительном просмотре, размер:', avatarSize);
   } else {
     console.log('Контейнер предварительного просмотра не найден');
   }
@@ -2329,6 +2341,13 @@ function initAvatarConstructor() {
   
   // Добавляем обработчики событий
   addAvatarConstructorEventListeners();
+  
+  // Добавляем обработчик изменения размера окна для обновления предпросмотра
+  window.addEventListener('resize', () => {
+    if (modal.classList.contains('show')) {
+      updateAvatarPreview();
+    }
+  });
 }
 
 // Функция для добавления обработчиков событий конструктора
