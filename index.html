@@ -265,6 +265,8 @@
                 </div>
                 <p>стеклянные плиты будут переливаться и отражаться при помощи гироскопа или мышки</p>
                 
+
+                
             </div>
         </div>
     </div>
@@ -321,12 +323,20 @@
     <div id="side-menu" class="side-menu">
       <div class="side-menu__content">
         <span class="side-menu__close" style="cursor:pointer;font-size:2em;position:absolute;top:18px;right:24px;">&times;</span>
-        <div id="user-info" style="width:100%;max-width:none;text-align:center;font-size:1.2em;font-weight:bold;margin:2.2em 0 1.2em 0;"></div>
+        
+        <!-- Имя пользователя сверху -->
+        <div id="user-name" style="width:100%;text-align:center;font-size:1.2em;font-weight:bold;margin:2.2em 0 1.2em 0;display:none;"></div>
+        
+        <!-- Аватарка по центру -->
+        <div id="user-avatar-container" style="width:100%;text-align:center;position:absolute;top:50%;left:50%;transform:translate(-50%, -50%);display:none;"></div>
+        
+        <!-- Секция авторизации -->
         <div id="auth-section" style="width:60%;max-width:280px;text-align:center;position:absolute;top:50%;left:50%;transform:translate(-50%, -50%);">
           <h2>Вход или регистрация</h2>
           <button id="login-btn">Войти через Google</button>
           <button id="custom-auth-btn" style="margin-top:0.8em;background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);color:#fff;border:none;border-radius:10px;padding:0.6em 1.4em;font-size:1em;font-weight:500;cursor:pointer;transition:all 0.3s;box-shadow:0 2px 8px rgba(102,126,234,0.15);">Войти по логину</button>
         </div>
+        
         <div class="side-menu__bottom-link" style="position:absolute;bottom:72px;left:0;width:100%;text-align:center;">
           <button id="logout-btn" style="display:none;width:90%;max-width:320px;margin:0 auto 0.7em auto;padding-left:2.5em;">Выйти</button>
         </div>

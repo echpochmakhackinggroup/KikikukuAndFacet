@@ -2244,3 +2244,228 @@ body.dark-theme .auth-message.error {
     font-size: 0.95em;
   }
 }
+
+/* Avatar Styles */
+.user-avatar {
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  border: 2px solid rgba(255,255,255,0.2);
+}
+
+.user-avatar:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+
+/* Сохраняем цвета фигур при адаптации */
+.user-avatar > div[style*="background-color"] {
+  /* Сохраняем оригинальный цвет фона */
+}
+
+/* Принудительно сохраняем цвета для всех фигур */
+.user-avatar > div[data-shape="square"],
+.user-avatar > div[data-shape="circle"],
+.user-avatar > div[data-shape="diamond"] {
+  /* Сохраняем background-color из inline стилей */
+}
+
+/* Side menu user info styles */
+#user-name {
+  color: #333;
+  font-size: 1.2em;
+  font-weight: bold;
+  margin-bottom: 2em;
+}
+
+body.dark-theme #user-name {
+  color: #fff;
+}
+
+#user-avatar-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 2em 0;
+  min-height: 200px; /* Обеспечиваем место для большой аватарки */
+}
+
+/* Comment item styles */
+.comment-item {
+  transition: all 0.3s ease;
+}
+
+.comment-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Аватарки в комментариях */
+.comment-item .user-avatar {
+  margin-right: 0; /* Убираем отступ справа */
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  border: 2px solid rgba(255,255,255,0.3);
+}
+
+.comment-item .user-avatar:hover {
+  transform: scale(1.05);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+}
+
+/* Dark theme avatar styles */
+body.dark-theme .user-avatar {
+  border-color: rgba(255,255,255,0.3);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+body.dark-theme .user-avatar:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+/* Темная тема для аватарок в комментариях */
+body.dark-theme .comment-item .user-avatar {
+  border-color: rgba(255,255,255,0.4);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+
+body.dark-theme .comment-item .user-avatar:hover {
+  box-shadow: 0 3px 8px rgba(0,0,0,0.5);
+}
+
+/* Responsive avatar styles */
+@media (max-width: 600px) {
+  .user-avatar {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 11px !important;
+  }
+  
+  /* Специальные стили для аватарки в боковом меню на мобильных */
+  #user-avatar-container .user-avatar {
+    width: 120px !important; /* Уменьшаем с 192px до 120px на мобильных */
+    height: 120px !important;
+    font-size: 48px !important;
+  }
+  
+  /* Размеры фигур для большой аватарки в боковом меню */
+  #user-avatar-container .user-avatar > div {
+    width: 72px !important; /* 120 * 0.6 */
+    height: 72px !important;
+  }
+  
+
+  
+  /* Адаптируем размеры фигур для мобильных, но сохраняем цвета */
+  .user-avatar > div {
+    width: 16.8px !important; /* 28 * 0.6 */
+    height: 16.8px !important;
+    /* НЕ переопределяем background-color здесь */
+  }
+  
+
+  
+  .comment-item {
+    padding: 0.8em !important;
+  }
+  
+  #comments-list .comment-item .user-avatar {
+    width: 20px !important;
+    height: 20px !important;
+    font-size: 8px !important;
+  }
+  
+  /* Адаптируем отступы для комментариев с аватарками */
+  .comment-item {
+    padding-left: 2.5em !important;
+  }
+  
+  #comments-list .comment-item .user-avatar > div {
+    width: 12px !important; /* 20 * 0.6 */
+    height: 12px !important;
+    /* НЕ переопределяем background-color здесь */
+  }
+  
+
+}
+
+@media (max-width: 480px) {
+  .user-avatar {
+    width: 24px !important;
+    height: 24px !important;
+    font-size: 10px !important;
+  }
+  
+  /* Специальные стили для аватарки в боковом меню на маленьких экранах */
+  #user-avatar-container .user-avatar {
+    width: 96px !important; /* Уменьшаем еще больше */
+    height: 96px !important;
+    font-size: 38px !important;
+  }
+  
+  /* Размеры фигур для большой аватарки на маленьких экранах */
+  #user-avatar-container .user-avatar > div {
+    width: 57.6px !important; /* 96 * 0.6 */
+    height: 57.6px !important;
+  }
+  
+
+  
+  /* Адаптируем размеры фигур для маленьких экранов, но сохраняем цвета */
+  .user-avatar > div {
+    width: 14.4px !important; /* 24 * 0.6 */
+    height: 14.4px !important;
+    /* НЕ переопределяем background-color здесь */
+  }
+  
+
+  
+  #comments-list .comment-item .user-avatar {
+    width: 18px !important;
+    height: 18px !important;
+    font-size: 7px !important;
+  }
+  
+  /* Адаптируем отступы для комментариев с аватарками */
+  .comment-item {
+    padding-left: 2.2em !important;
+  }
+  
+  #comments-list .comment-item .user-avatar > div {
+    width: 10.8px !important; /* 18 * 0.6 */
+    height: 10.8px !important;
+    /* НЕ переопределяем background-color здесь */
+  }
+  
+
+}
+
+@media (max-width: 320px) {
+  .user-avatar {
+    width: 20px !important;
+    height: 20px !important;
+    font-size: 8px !important;
+  }
+  
+  /* Специальные стили для аватарки в боковом меню на очень маленьких экранах */
+  #user-avatar-container .user-avatar {
+    width: 80px !important; /* Минимальный размер для очень маленьких экранов */
+    height: 80px !important;
+    font-size: 32px !important;
+  }
+  
+  /* Размеры фигур для большой аватарки на очень маленьких экранах */
+  #user-avatar-container .user-avatar > div {
+    width: 48px !important; /* 80 * 0.6 */
+    height: 48px !important;
+  }
+  
+
+  
+  /* Адаптируем размеры фигур для очень маленьких экранов, но сохраняем цвета */
+  .user-avatar > div {
+    width: 12px !important; /* 20 * 0.6 */
+    height: 12px !important;
+    /* НЕ переопределяем background-color здесь */
+  }
+  
+
+}

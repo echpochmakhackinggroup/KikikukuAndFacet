@@ -1,6 +1,194 @@
 // Инициализация GSAP плагинов
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
+// === Avatar System ===
+// Цвета для аватарок
+const avatarColors = {
+  R: '#ff4444', // Red
+  G: '#44ff44', // Green
+  B: '#4444ff', // Blue
+  Y: '#ffff44', // Yellow
+  P: '#ff44ff', // Purple
+  C: '#44ffff', // Cyan
+  O: '#ff8844', // Orange
+  W: '#ffffff', // White
+  K: '#000000'  // Black
+};
+
+// Фигуры для аватарок
+const avatarShapes = {
+  S: 'square',    // Square
+  C: 'circle',    // Circle
+  D: 'diamond'    // Diamond
+};
+
+// Генерация случайного кода аватарки
+function generateRandomAvatarCode() {
+  const colors = Object.keys(avatarColors);
+  const shapes = Object.keys(avatarShapes);
+  
+  const color1 = colors[Math.floor(Math.random() * colors.length)];
+  const shape = shapes[Math.floor(Math.random() * shapes.length)];
+  const color2 = colors[Math.floor(Math.random() * colors.length)];
+  
+  return `${color1}${shape}${color2}`;
+}
+
+// Получение или создание аватарки для пользователя
+async function getUserAvatar(userUid) {
+  try {
+    // Проверяем, есть ли аватарка в базе
+    const avatarDoc = await db.collection('avatarka').doc(userUid).get();
+    
+    if (avatarDoc.exists) {
+      return avatarDoc.data().code;
+    } else {
+      // Создаем новую аватарку
+      const newAvatarCode = generateRandomAvatarCode();
+      
+      await db.collection('avatarka').doc(userUid).set({
+        code: newAvatarCode,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      
+      return newAvatarCode;
+    }
+  } catch (error) {
+    console.error('Ошибка при получении аватарки:', error);
+    return generateRandomAvatarCode(); // Возвращаем случайную аватарку в случае ошибки
+  }
+}
+
+// Создание HTML элемента аватарки
+function createAvatarElement(avatarCode, size = 32) {
+  const avatarDiv = document.createElement('div');
+  avatarDiv.className = 'user-avatar';
+  
+  // Определяем размеры в зависимости от устройства
+  const isMobile = window.innerWidth <= 768;
+  const isSmallScreen = window.innerWidth <= 480;
+  const isVerySmallScreen = window.innerWidth <= 320;
+  
+  // Адаптируем размеры для мобильных устройств
+  let actualSize = size;
+  if (isVerySmallScreen && size > 80) {
+    actualSize = 80;
+  } else if (isSmallScreen && size > 96) {
+    actualSize = 96;
+  } else if (isMobile && size > 120) {
+    actualSize = 120;
+  }
+  
+  avatarDiv.style.cssText = `
+    width: ${actualSize}px;
+    height: ${actualSize}px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: ${actualSize * 0.4}px;
+    font-weight: bold;
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    margin-right: 8px;
+    position: relative;
+    overflow: hidden;
+  `;
+  
+  // Парсим код аватарки (например: RSGB)
+  const color1 = avatarCode[0];
+  const shape = avatarCode[1];
+  const color2 = avatarCode[2];
+  
+  // Проверяем валидность кода
+  if (!avatarColors[color1] || !avatarShapes[shape] || !avatarColors[color2]) {
+    console.warn('Неверный код аватарки:', avatarCode);
+    // Возвращаем дефолтную аватарку
+    return createAvatarElement('RSG', size);
+  }
+  
+  // Устанавливаем фон
+  avatarDiv.style.backgroundColor = avatarColors[color2] || '#666666';
+  
+  // Создаем фигуру
+  const shapeElement = document.createElement('div');
+  
+  // Применяем форму
+  switch (shape) {
+    case 'S': // Square
+      shapeElement.style.cssText = `
+        width: ${actualSize * 0.6}px;
+        height: ${actualSize * 0.6}px;
+        background-color: ${avatarColors[color1]};
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        border-radius: 0;
+      `;
+      shapeElement.setAttribute('data-shape', 'square');
+      break;
+    case 'C': // Circle
+      shapeElement.style.cssText = `
+        width: ${actualSize * 0.6}px;
+        height: ${actualSize * 0.6}px;
+        background-color: ${avatarColors[color1]};
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        border-radius: 50%;
+      `;
+      shapeElement.setAttribute('data-shape', 'circle');
+      break;
+
+    case 'D': // Diamond
+      shapeElement.style.cssText = `
+        width: ${actualSize * 0.6}px;
+        height: ${actualSize * 0.6}px;
+        background-color: ${avatarColors[color1]};
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(45deg);
+        border-radius: 0;
+      `;
+      shapeElement.setAttribute('data-shape', 'diamond');
+      break;
+    default:
+      // Дефолтная фигура - круг
+      shapeElement.style.cssText = `
+        width: ${actualSize * 0.6}px;
+        height: ${actualSize * 0.6}px;
+        background-color: ${avatarColors[color1]};
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        border-radius: 50%;
+      `;
+      shapeElement.setAttribute('data-shape', 'circle');
+  }
+  
+  avatarDiv.appendChild(shapeElement);
+  return avatarDiv;
+}
+
+// Обновление аватарки в UI
+async function updateUserAvatarInUI(userUid, container) {
+  try {
+    const avatarCode = await getUserAvatar(userUid);
+    const avatarElement = createAvatarElement(avatarCode, 192); // Увеличиваем размер аватарки в 3 раза
+    
+    // Очищаем контейнер и добавляем аватарку
+    container.innerHTML = '';
+    container.appendChild(avatarElement);
+    
+  } catch (error) {
+    console.error('Ошибка при обновлении аватарки в UI:', error);
+  }
+}
+
 // Оптимизация для очень маленьких экранов
 const isSmallScreen = window.innerWidth <= 320;
 const isMobile = window.innerWidth <= 768;
@@ -929,10 +1117,54 @@ auth.onAuthStateChanged(user => {
 });
 
 // === Comments ===
-function renderComment(doc) {
+async function renderComment(doc) {
   const data = doc.data();
   const div = document.createElement('div');
-  div.innerHTML = `<b>${data.user}</b> <span>${new Date(data.timestamp?.toDate?.() || Date.now()).toLocaleString()}</span><br>${data.text}`;
+  div.className = 'comment-item';
+  div.style.cssText = `
+    margin-bottom: 1em;
+    padding: 1em;
+    background: rgba(255,255,255,0.1);
+    border-radius: 10px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+    position: relative;
+    padding-left: 3em; /* Место для аватарки */
+  `;
+  
+  // Создаем контейнер для аватарки в левом верхнем углу
+  const avatarContainer = document.createElement('div');
+  avatarContainer.style.cssText = `
+    position: absolute;
+    top: 0.5em;
+    left: 0.5em;
+    z-index: 1;
+  `;
+  
+  // Добавляем аватарку, если есть uid
+  if (data.uid) {
+    try {
+      const avatarCode = await getUserAvatar(data.uid);
+      const avatarElement = createAvatarElement(avatarCode, 24);
+      avatarContainer.appendChild(avatarElement);
+    } catch (error) {
+      console.error('Ошибка при создании аватарки для комментария:', error);
+    }
+  }
+  
+  // Создаем контейнер для текста комментария
+  const textContainer = document.createElement('div');
+  
+  // Определяем цвет в зависимости от темы
+  const isDarkTheme = document.body.classList.contains('dark-theme');
+  const userNameColor = isDarkTheme ? '#44ff44' : '#000000';
+  
+  textContainer.innerHTML = `<b style="color: ${userNameColor};">${data.user}</b> <span>${new Date(data.timestamp?.toDate?.() || Date.now()).toLocaleString()}</span><br>${data.text}`;
+  
+  div.appendChild(avatarContainer);
+  div.appendChild(textContainer);
+  
+  // Анимация появления
   div.style.opacity = '0';
   div.style.transform = 'translateY(20px)';
   commentsList.appendChild(div);
@@ -943,25 +1175,29 @@ function renderComment(doc) {
   }, 10);
 }
 
-function loadComments() {
+async function loadComments() {
   // Анимируем исчезновение старых комментариев
   const oldComments = Array.from(commentsList.children);
   oldComments.forEach(div => {
     div.style.transition = 'opacity 0.4s';
     div.style.opacity = '0';
   });
-  setTimeout(() => {
+  setTimeout(async () => {
     commentsList.innerHTML = '';
-    db.collection('comments').orderBy('timestamp', 'desc').limit(5).get().then(snapshot => {
-      snapshot.forEach(renderComment);
-      // Показываем форму, если пользователь авторизован (Google или кастомный)
-      const customSession = JSON.parse(localStorage.getItem('customUserSession') || 'null');
-      if (auth.currentUser || customSession) {
-        commentForm.style.display = '';
-      } else {
-        commentForm.style.display = 'none';
-      }
-    });
+    const snapshot = await db.collection('comments').orderBy('timestamp', 'desc').limit(5).get();
+    
+    // Рендерим комментарии последовательно для правильной загрузки аватарок
+    for (const doc of snapshot.docs) {
+      await renderComment(doc);
+    }
+    
+    // Показываем форму, если пользователь авторизован (Google или кастомный)
+    const customSession = JSON.parse(localStorage.getItem('customUserSession') || 'null');
+    if (auth.currentUser || customSession) {
+      commentForm.style.display = '';
+    } else {
+      commentForm.style.display = 'none';
+    }
   }, 400);
 }
 
@@ -998,8 +1234,9 @@ commentForm.onsubmit = function(e) {
   });
 };
 
-auth.onAuthStateChanged(user => {
-  loadComments();
+auth.onAuthStateChanged(async (user) => {
+  await loadComments();
+  await updateCustomAuthUI();
 });
 
 // === Custom Authentication ===
@@ -1171,10 +1408,10 @@ loginForm.onsubmit = async (e) => {
     showAuthMessage('Вход выполнен успешно!', 'success');
     
     // Закрываем модальное окно
-    setTimeout(() => {
+    setTimeout(async () => {
       customAuthModal.classList.remove('show');
       // Обновляем UI
-      updateCustomAuthUI();
+      await updateCustomAuthUI();
       // Показываем форму комментариев
       if (commentForm) {
         commentForm.style.display = '';
@@ -1199,9 +1436,10 @@ loginForm.onsubmit = async (e) => {
 };
 
 // Функция для обновления UI после входа/выхода
-function updateCustomAuthUI() {
+async function updateCustomAuthUI() {
   const session = JSON.parse(localStorage.getItem('customUserSession') || 'null');
-  const userInfo = document.getElementById('user-info');
+  const userName = document.getElementById('user-name');
+  const userAvatarContainer = document.getElementById('user-avatar-container');
   const authSection = document.getElementById('auth-section');
   const logoutBtn = document.getElementById('logout-btn');
   const privacyNote = document.querySelector('.user-privacy-note');
@@ -1209,9 +1447,14 @@ function updateCustomAuthUI() {
   
   if (session && session.isCustomUser) {
     // Пользователь вошёл через кастомную систему
-    if (userInfo) {
-      userInfo.textContent = session.username;
-      userInfo.style.display = '';
+    if (userName) {
+      userName.textContent = session.username;
+      userName.style.display = '';
+    }
+    if (userAvatarContainer) {
+      userAvatarContainer.style.display = '';
+      // Обновляем аватарку
+      await updateUserAvatarInUI(`custom_${session.username}`, userAvatarContainer);
     }
     if (authSection) authSection.style.display = 'none';
     if (logoutBtn) logoutBtn.style.display = '';
@@ -1223,11 +1466,36 @@ function updateCustomAuthUI() {
     if (commentForm) {
       commentForm.style.display = '';
     }
-  } else if (!auth.currentUser) {
+  } else if (auth.currentUser) {
+    // Google пользователь
+    if (userName) {
+      userName.textContent = auth.currentUser.displayName || auth.currentUser.email || 'Пользователь';
+      userName.style.display = '';
+    }
+    if (userAvatarContainer) {
+      userAvatarContainer.style.display = '';
+      // Обновляем аватарку
+      await updateUserAvatarInUI(auth.currentUser.uid, userAvatarContainer);
+    }
+    if (authSection) authSection.style.display = 'none';
+    if (logoutBtn) logoutBtn.style.display = '';
+    if (privacyNote && privacyNoteContainer) {
+      privacyNoteContainer.appendChild(privacyNote);
+      privacyNote.style.display = '';
+    }
+    // Показываем форму комментариев
+    if (commentForm) {
+      commentForm.style.display = '';
+    }
+  } else {
     // Никто не вошёл
-    if (userInfo) {
-      userInfo.textContent = '';
-      userInfo.style.display = 'none';
+    if (userName) {
+      userName.textContent = '';
+      userName.style.display = 'none';
+    }
+    if (userAvatarContainer) {
+      userAvatarContainer.innerHTML = '';
+      userAvatarContainer.style.display = 'none';
     }
     if (authSection) authSection.style.display = '';
     if (logoutBtn) logoutBtn.style.display = 'none';
@@ -1244,14 +1512,14 @@ function updateCustomAuthUI() {
 
 // Обновляем обработчик выхода
 const originalLogoutBtn = logoutBtn.onclick;
-logoutBtn.onclick = () => {
+logoutBtn.onclick = async () => {
   // Выходим из Google аккаунта
   if (originalLogoutBtn) {
     originalLogoutBtn();
   }
   // Выходим из кастомной системы
   localStorage.removeItem('customUserSession');
-  updateCustomAuthUI();
+  await updateCustomAuthUI();
   // Скрываем форму комментариев
   if (commentForm) {
     commentForm.style.display = 'none';
@@ -1259,10 +1527,29 @@ logoutBtn.onclick = () => {
 };
 
 // Проверяем сессию при загрузке страницы
-updateCustomAuthUI();
+(async () => {
+  await updateCustomAuthUI();
+})();
+
+// Обработчик изменения размера окна для пересчета аватарок
+window.addEventListener('resize', () => {
+  // Пересчитываем аватарки при изменении размера окна
+  const userAvatarContainer = document.getElementById('user-avatar-container');
+  if (userAvatarContainer && userAvatarContainer.style.display !== 'none') {
+    // Если аватарка отображается, обновляем её
+    const session = JSON.parse(localStorage.getItem('customUserSession') || 'null');
+    if (session && session.isCustomUser) {
+      updateUserAvatarInUI(`custom_${session.username}`, userAvatarContainer);
+    } else if (auth.currentUser) {
+      updateUserAvatarInUI(auth.currentUser.uid, userAvatarContainer);
+    }
+  }
+});
 
 // При загрузке страницы
 // Удаляю: loadComments();
+
+
 
 // --- Эффект отражения для плит при движении мышки или гироскопа ---
 (function setupReflectionEffect() {
