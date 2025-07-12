@@ -890,18 +890,41 @@ loginBtn.onclick = () => {
 logoutBtn.onclick = () => auth.signOut();
 
 auth.onAuthStateChanged(user => {
-  if (user) {
-    loginBtn.style.display = 'none';
-    logoutBtn.style.display = '';
-    userInfo.textContent = `Вы вошли как ${user.displayName}`;
-    commentForm.style.display = '';
-    document.querySelector('.user-privacy-note').style.display = '';
+  // Проверяем кастомную сессию
+  const customSession = JSON.parse(localStorage.getItem('customUserSession') || 'null');
+  
+  const authSection = document.getElementById('auth-section');
+  const userInfo = document.getElementById('user-info');
+  const loginBtn = document.getElementById('login-btn');
+  const logoutBtn = document.getElementById('logout-btn');
+  const h2 = authSection?.querySelector('h2');
+  const privacyNote = document.querySelector('.user-privacy-note');
+  const privacyNoteContainer = document.querySelector('.side-menu__privacy-note');
+  
+  if (user || customSession) {
+    // Кто-то вошёл (Google или кастомный пользователь)
+    if (userInfo) {
+      userInfo.textContent = user ? user.displayName : customSession.username;
+      userInfo.style.display = '';
+    }
+    if (authSection) authSection.style.display = 'none';
+    if (logoutBtn) logoutBtn.style.display = '';
+    if (privacyNote && privacyNoteContainer) {
+      privacyNoteContainer.appendChild(privacyNote);
+      privacyNote.style.display = '';
+    }
   } else {
-    loginBtn.style.display = '';
-    logoutBtn.style.display = 'none';
-    userInfo.textContent = '';
-    commentForm.style.display = 'none';
-    document.querySelector('.user-privacy-note').style.display = 'none';
+    // Никто не вошёл
+    if (userInfo) {
+      userInfo.textContent = '';
+      userInfo.style.display = 'none';
+    }
+    if (authSection) authSection.style.display = '';
+    if (logoutBtn) logoutBtn.style.display = 'none';
+    if (privacyNote && authSection) {
+      authSection.appendChild(privacyNote);
+      privacyNote.style.display = 'none';
+    }
   }
 });
 
@@ -931,6 +954,13 @@ function loadComments() {
     commentsList.innerHTML = '';
     db.collection('comments').orderBy('timestamp', 'desc').limit(5).get().then(snapshot => {
       snapshot.forEach(renderComment);
+      // Показываем форму, если пользователь авторизован (Google или кастомный)
+      const customSession = JSON.parse(localStorage.getItem('customUserSession') || 'null');
+      if (auth.currentUser || customSession) {
+        commentForm.style.display = '';
+      } else {
+        commentForm.style.display = 'none';
+      }
     });
   }, 400);
 }
@@ -938,12 +968,28 @@ function loadComments() {
 commentForm.onsubmit = function(e) {
   e.preventDefault();
   const user = auth.currentUser;
-  if (!user) return;
+  const customSession = JSON.parse(localStorage.getItem('customUserSession') || 'null');
+  
+  if (!user && !customSession) return;
+  
   const text = commentInput.value.trim();
   if (!text) return;
+  
+  let userName, userUid;
+  
+  if (user) {
+    // Google пользователь
+    userName = user.displayName || user.email || 'Аноним';
+    userUid = user.uid;
+  } else {
+    // Кастомный пользователь
+    userName = customSession.username;
+    userUid = `custom_${customSession.username}`;
+  }
+  
   db.collection('comments').add({
-    user: user.displayName || user.email || 'Аноним',
-    uid: user.uid,
+    user: userName,
+    uid: userUid,
     text,
     timestamp: firebase.firestore.FieldValue.serverTimestamp()
   }).then(() => {
@@ -955,6 +1001,265 @@ commentForm.onsubmit = function(e) {
 auth.onAuthStateChanged(user => {
   loadComments();
 });
+
+// === Custom Authentication ===
+const customAuthBtn = document.getElementById('custom-auth-btn');
+const customAuthModal = document.getElementById('modal-custom-auth');
+const authTabs = document.querySelectorAll('.auth-tab');
+const loginForm = document.getElementById('login-form');
+const registerForm = document.getElementById('register-form');
+const authMessage = document.getElementById('auth-message');
+
+// Открытие модального окна аутентификации
+customAuthBtn.onclick = () => {
+  customAuthModal.classList.add('show');
+  gsap.fromTo(customAuthModal.querySelector('.modal__content'), 
+    { opacity: 0, scale: 0.9 }, 
+    { opacity: 1, scale: 1, duration: 0.3, ease: 'power3.out' }
+  );
+};
+
+// Закрытие модального окна
+customAuthModal.querySelector('.modal__close').onclick = () => {
+  customAuthModal.classList.remove('show');
+};
+
+// Закрытие модального окна при клике вне его
+customAuthModal.addEventListener('click', (e) => {
+  if (e.target === customAuthModal) {
+    customAuthModal.classList.remove('show');
+  }
+});
+
+// Переключение между табами
+authTabs.forEach(tab => {
+  tab.addEventListener('click', () => {
+    const targetTab = tab.dataset.tab;
+    
+    // Обновляем активный таб
+    authTabs.forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    
+    // Показываем соответствующую форму
+    loginForm.classList.remove('active');
+    registerForm.classList.remove('active');
+    
+    if (targetTab === 'login') {
+      loginForm.classList.add('active');
+    } else {
+      registerForm.classList.add('active');
+    }
+    
+    // Очищаем сообщения
+    authMessage.className = 'auth-message';
+    authMessage.style.display = 'none';
+  });
+});
+
+// Функция для показа сообщений
+function showAuthMessage(message, type) {
+  authMessage.textContent = message;
+  authMessage.className = `auth-message ${type}`;
+  authMessage.style.display = 'block';
+}
+
+// Функция для хеширования пароля (простая реализация)
+function hashPassword(password) {
+  let hash = 0;
+  for (let i = 0; i < password.length; i++) {
+    const char = password.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return hash.toString();
+}
+
+// Обработка регистрации
+registerForm.onsubmit = async (e) => {
+  e.preventDefault();
+  
+  const username = document.getElementById('register-username').value.trim();
+  const password = document.getElementById('register-password').value;
+  const passwordConfirm = document.getElementById('register-password-confirm').value;
+  
+  // Валидация
+  if (username.length < 3) {
+    showAuthMessage('Логин должен содержать минимум 3 символа', 'error');
+    return;
+  }
+  
+  if (password.length < 6) {
+    showAuthMessage('Пароль должен содержать минимум 6 символов', 'error');
+    return;
+  }
+  
+  if (password !== passwordConfirm) {
+    showAuthMessage('Пароли не совпадают', 'error');
+    return;
+  }
+  
+  try {
+    // Проверяем, существует ли пользователь
+    const userDoc = await db.collection('customUsers').doc(username).get();
+    
+    if (userDoc.exists) {
+      showAuthMessage('Пользователь с таким логином уже существует', 'error');
+      return;
+    }
+    
+    // Создаём нового пользователя
+    const hashedPassword = hashPassword(password);
+    await db.collection('customUsers').doc(username).set({
+      username: username,
+      password: hashedPassword,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    
+    showAuthMessage('Регистрация успешна! Теперь вы можете войти', 'success');
+    
+    // Переключаемся на форму входа
+    document.querySelector('[data-tab="login"]').click();
+    
+    // Очищаем форму регистрации
+    registerForm.reset();
+    
+  } catch (error) {
+    console.error('Ошибка регистрации:', error);
+    showAuthMessage('Ошибка при регистрации. Попробуйте позже', 'error');
+  }
+};
+
+// Обработка входа
+loginForm.onsubmit = async (e) => {
+  e.preventDefault();
+  
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+  
+  if (!username || !password) {
+    showAuthMessage('Заполните все поля', 'error');
+    return;
+  }
+  
+  try {
+    // Ищем пользователя в базе данных
+    const userDoc = await db.collection('customUsers').doc(username).get();
+    
+    if (!userDoc.exists) {
+      showAuthMessage('Пользователь не найден', 'error');
+      return;
+    }
+    
+    const userData = userDoc.data();
+    const hashedPassword = hashPassword(password);
+    
+    if (userData.password !== hashedPassword) {
+      showAuthMessage('Неверный пароль', 'error');
+      return;
+    }
+    
+    // Успешный вход - создаём сессию
+    const sessionData = {
+      username: username,
+      loginTime: firebase.firestore.FieldValue.serverTimestamp(),
+      isCustomUser: true
+    };
+    
+    // Сохраняем в localStorage для простоты
+    localStorage.setItem('customUserSession', JSON.stringify(sessionData));
+    
+    showAuthMessage('Вход выполнен успешно!', 'success');
+    
+    // Закрываем модальное окно
+    setTimeout(() => {
+      customAuthModal.classList.remove('show');
+      // Обновляем UI
+      updateCustomAuthUI();
+      // Показываем форму комментариев
+      if (commentForm) {
+        commentForm.style.display = '';
+        // Плавная анимация появления
+        commentForm.style.opacity = '0';
+        commentForm.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+          commentForm.style.transition = 'opacity 0.5s, transform 0.5s';
+          commentForm.style.opacity = '1';
+          commentForm.style.transform = 'translateY(0)';
+        }, 100);
+      }
+    }, 1500);
+    
+    // Очищаем форму
+    loginForm.reset();
+    
+  } catch (error) {
+    console.error('Ошибка входа:', error);
+    showAuthMessage('Ошибка при входе. Попробуйте позже', 'error');
+  }
+};
+
+// Функция для обновления UI после входа/выхода
+function updateCustomAuthUI() {
+  const session = JSON.parse(localStorage.getItem('customUserSession') || 'null');
+  const userInfo = document.getElementById('user-info');
+  const authSection = document.getElementById('auth-section');
+  const logoutBtn = document.getElementById('logout-btn');
+  const privacyNote = document.querySelector('.user-privacy-note');
+  const privacyNoteContainer = document.querySelector('.side-menu__privacy-note');
+  
+  if (session && session.isCustomUser) {
+    // Пользователь вошёл через кастомную систему
+    if (userInfo) {
+      userInfo.textContent = session.username;
+      userInfo.style.display = '';
+    }
+    if (authSection) authSection.style.display = 'none';
+    if (logoutBtn) logoutBtn.style.display = '';
+    if (privacyNote && privacyNoteContainer) {
+      privacyNoteContainer.appendChild(privacyNote);
+      privacyNote.style.display = '';
+    }
+    // Показываем форму комментариев
+    if (commentForm) {
+      commentForm.style.display = '';
+    }
+  } else if (!auth.currentUser) {
+    // Никто не вошёл
+    if (userInfo) {
+      userInfo.textContent = '';
+      userInfo.style.display = 'none';
+    }
+    if (authSection) authSection.style.display = '';
+    if (logoutBtn) logoutBtn.style.display = 'none';
+    if (privacyNote && authSection) {
+      authSection.appendChild(privacyNote);
+      privacyNote.style.display = 'none';
+    }
+    // Скрываем форму комментариев
+    if (commentForm) {
+      commentForm.style.display = 'none';
+    }
+  }
+}
+
+// Обновляем обработчик выхода
+const originalLogoutBtn = logoutBtn.onclick;
+logoutBtn.onclick = () => {
+  // Выходим из Google аккаунта
+  if (originalLogoutBtn) {
+    originalLogoutBtn();
+  }
+  // Выходим из кастомной системы
+  localStorage.removeItem('customUserSession');
+  updateCustomAuthUI();
+  // Скрываем форму комментариев
+  if (commentForm) {
+    commentForm.style.display = 'none';
+  }
+};
+
+// Проверяем сессию при загрузке страницы
+updateCustomAuthUI();
 
 // При загрузке страницы
 // Удаляю: loadComments();
@@ -1491,3 +1796,39 @@ function positionImageMarkers() {
 window.addEventListener('DOMContentLoaded', positionImageMarkers);
 window.addEventListener('resize', positionImageMarkers);
 window.addEventListener('load', positionImageMarkers); 
+
+document.querySelector('.nav-experimental-link')?.addEventListener('click', function() {
+  const modal = document.getElementById('modal-experimental');
+  if (modal) {
+    modal.style.display = 'flex';
+    if (window.gsap) {
+      gsap.fromTo(modal, { opacity: 0 }, { opacity: 1, duration: 0.4, ease: 'power3.out' });
+      gsap.fromTo(modal.querySelector('.modal__content'),
+        { scale: 0.95, opacity: 0, y: 40 },
+        { scale: 1, opacity: 1, y: 0, duration: 0.5, ease: 'back.out(1.2)', delay: 0.1 }
+      );
+    }
+    document.body.style.overflow = 'hidden';
+  }
+}); 
+
+// --- Боковое меню ---
+const sideMenu = document.getElementById('side-menu');
+const sideMenuContent = document.querySelector('.side-menu__content');
+const openSideMenu = () => {
+  sideMenu.classList.add('open');
+  gsap.set(sideMenuContent, { x: '-100%' });
+  gsap.to(sideMenu, { duration: 0.3, autoAlpha: 1, ease: 'power2.out' });
+  gsap.to(sideMenuContent, { x: 0, duration: 0.5, ease: 'power3.out' });
+};
+const closeSideMenu = () => {
+  gsap.to(sideMenuContent, { x: '-100%', duration: 0.5, ease: 'power3.in' });
+  gsap.to(sideMenu, { duration: 0.3, autoAlpha: 0, delay: 0.5, onComplete: () => {
+    sideMenu.classList.remove('open');
+  }});
+};
+document.querySelector('.nav-menu-link')?.addEventListener('click', openSideMenu);
+document.querySelector('.side-menu__close')?.addEventListener('click', closeSideMenu);
+sideMenu?.addEventListener('click', function(e) {
+  if (e.target === sideMenu) closeSideMenu();
+}); 

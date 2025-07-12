@@ -27,8 +27,7 @@
             <div class="nav__logo">ура</div>
             <ul class="nav__menu">
                 <li><a href="#home">Главная</a></li>
-                <li><a href="#about">О нас</a></li>
-                <li><a href="#services">Услуги</a></li>
+                <li><span class="nav-menu-link" style="cursor:pointer;">Меню</span></li>
             </ul>
             <div class="nav__burger">
                 <span></span>
@@ -248,10 +247,6 @@
     </section>
 
     <!-- Кнопки для открытия модальных страниц -->
-    <div class="container" style="text-align:center; margin-bottom: 40px;">
-        <button class="big-modal-btn" data-modal="experimental">Экспериментальные функции</button>
-    </div>
-
     <!-- Модальное окно экспериментальных функций -->
     <div id="modal-experimental" class="modal big-modal">
         <div class="modal__content">
@@ -274,21 +269,82 @@
         </div>
     </div>
 
+    <!-- Модальное окно для входа по логину -->
+    <div id="modal-custom-auth" class="modal">
+        <div class="modal__content">
+            <span class="modal__close">&times;</span>
+            <div class="modal__header">
+                <h2>Вход по логину</h2>
+            </div>
+            <div class="modal__body">
+                <div class="auth-tabs">
+                    <button class="auth-tab active" data-tab="login">Войти</button>
+                    <button class="auth-tab" data-tab="register">Регистрация</button>
+                </div>
+                
+                <!-- Форма входа -->
+                <form id="login-form" class="auth-form active">
+                    <div class="form-group">
+                        <label for="login-username">Логин</label>
+                        <input type="text" id="login-username" required placeholder="Введите логин">
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Пароль</label>
+                        <input type="password" id="login-password" required placeholder="Введите пароль">
+                    </div>
+                    <button type="submit" class="auth-submit-btn">Войти</button>
+                </form>
+                
+                <!-- Форма регистрации -->
+                <form id="register-form" class="auth-form">
+                    <div class="form-group">
+                        <label for="register-username">Логин</label>
+                        <input type="text" id="register-username" required placeholder="Придумайте логин">
+                    </div>
+                    <div class="form-group">
+                        <label for="register-password">Пароль</label>
+                        <input type="password" id="register-password" required placeholder="Придумайте пароль">
+                    </div>
+                    <div class="form-group">
+                        <label for="register-password-confirm">Подтвердите пароль</label>
+                        <input type="password" id="register-password-confirm" required placeholder="Повторите пароль">
+                    </div>
+                    <button type="submit" class="auth-submit-btn">Зарегистрироваться</button>
+                </form>
+                
+                <div id="auth-message" class="auth-message"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Боковое меню -->
+    <div id="side-menu" class="side-menu">
+      <div class="side-menu__content">
+        <span class="side-menu__close" style="cursor:pointer;font-size:2em;position:absolute;top:18px;right:24px;">&times;</span>
+        <div id="user-info" style="width:100%;max-width:none;text-align:center;font-size:1.2em;font-weight:bold;margin:2.2em 0 1.2em 0;"></div>
+        <div id="auth-section" style="width:60%;max-width:280px;text-align:center;position:absolute;top:50%;left:50%;transform:translate(-50%, -50%);">
+          <h2>Вход или регистрация</h2>
+          <button id="login-btn">Войти через Google</button>
+          <button id="custom-auth-btn" style="margin-top:0.8em;background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);color:#fff;border:none;border-radius:10px;padding:0.6em 1.4em;font-size:1em;font-weight:500;cursor:pointer;transition:all 0.3s;box-shadow:0 2px 8px rgba(102,126,234,0.15);">Войти по логину</button>
+        </div>
+        <div class="side-menu__bottom-link" style="position:absolute;bottom:72px;left:0;width:100%;text-align:center;">
+          <button id="logout-btn" style="display:none;width:90%;max-width:320px;margin:0 auto 0.7em auto;padding-left:2.5em;">Выйти</button>
+        </div>
+        <div class="side-menu__privacy-note" style="position:absolute;bottom:32px;left:0;width:100%;text-align:center;"></div>
+        <div class="side-menu__bottom-link" style="position:absolute;bottom:0;left:0;width:100%;text-align:center;">
+          <span class="nav-experimental-link" data-modal="experimental" style="cursor:pointer;">Экспериментальные функции</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Комментарии и авторизация -->
     <div class="centered-sections">
-      <div id="auth-section" style="max-width:400px;margin:2em auto;">
-        <h2>Вход или регистрация</h2>
-        <button id="login-btn">Войти через Google</button>
-        <button id="logout-btn" style="display:none;">Выйти</button>
-        <div id="user-info" style="margin-top:1em;"></div>
-        <div class="user-privacy-note" style="display:none;">Мы не собираем вашу информацию в злых целях</div>
-      </div>
       <div id="comments-section" style="max-width:500px;margin:2em auto;">
+        <div id="comments-list"></div>
         <form id="comment-form" style="display:none;">
           <textarea id="comment-input" placeholder="Ваш комментарий или пожелание..." required></textarea>
           <button type="submit">Отправить</button>
         </form>
-        <div id="comments-list"></div>
       </div>
     </div>
 
