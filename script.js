@@ -2588,4 +2588,276 @@ document.getElementById('user-avatar-container')?.addEventListener('click', func
   }
 });
 
- 
+// ===== ЗАГРУЗКА НОВОСТЕЙ ИЗ FIREBASE =====
+async function loadNews() {
+    const newsContainer = document.getElementById('news-container');
+    if (!newsContainer) {
+        console.error('Контейнер новостей не найден');
+        return;
+    }
+
+    console.log('Начинаем загрузку новостей...');
+
+    try {
+        // Проверяем, инициализирован ли Firebase
+        if (!db) {
+            console.error('Firebase не инициализирован');
+            throw new Error('Firebase не инициализирован');
+        }
+
+        // Показываем индикатор загрузки
+        newsContainer.innerHTML = `
+            <div class="news-loading">
+                <div class="loading-spinner"></div>
+                <p>Загрузка новостей...</p>
+            </div>
+        `;
+
+        console.log('Запрашиваем коллекцию news...');
+
+        // Загружаем новости с сортировкой по полю 'created' в убывающем порядке
+        let newsSnapshot;
+        try {
+            newsSnapshot = await db.collection('news')
+                .orderBy('created', 'desc')
+                .get();
+            console.log('Загружено с сортировкой по created:', newsSnapshot.size, 'документов');
+        } catch (sortError) {
+            console.log('Ошибка при сортировке по created, пробуем без сортировки:', sortError);
+            // Если есть ошибка с сортировкой, загружаем без неё
+            newsSnapshot = await db.collection('news').get();
+        }
+
+        console.log('Результат запроса:', newsSnapshot);
+        console.log('Количество документов:', newsSnapshot.size);
+        console.log('Пустая коллекция?', newsSnapshot.empty);
+
+        if (newsSnapshot.empty) {
+            console.log('Коллекция пустая, показываем сообщение');
+            // Если новостей нет
+            newsContainer.innerHTML = `
+                <div class="news-empty">
+                    <h3>Новостей пока нет</h3>
+                    <p>Следите за обновлениями!</p>
+                    <button onclick="loadNews()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: #2563eb; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                        Обновить
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        // Показываем только первую (самую последнюю) новость
+        if (newsSnapshot.size > 0) {
+            const firstDoc = newsSnapshot.docs[0]; // Берем первый документ (самый последний по дате создания)
+            console.log('Показываем новость:', firstDoc.id);
+            const newsData = firstDoc.data();
+            console.log('Данные новости:', newsData);
+            
+            const newsItem = document.createElement('div');
+            newsItem.className = 'news-item';
+            
+            // Проверяем наличие контента
+            const content = newsData.content || newsData.html || newsData.text || '';
+            console.log('Контент новости:', content);
+            
+            // Парсим размер из первой строки
+            let windowSize = null;
+            let cleanContent = content;
+            
+            if (content) {
+                const lines = content.split('\n');
+                const firstLine = lines[0].trim();
+                
+                // Проверяем, является ли первая строка размером (например, "600x600")
+                const sizeMatch = firstLine.match(/^(\d+)x(\d+)$/);
+                if (sizeMatch) {
+                    const width = parseInt(sizeMatch[1]);
+                    const height = parseInt(sizeMatch[2]);
+                    windowSize = { width, height };
+                    
+                    // Убираем первую строку из контента
+                    cleanContent = lines.slice(1).join('\n');
+                    console.log(`Размер окна: ${width}x${height}`);
+                }
+            }
+            
+            // Применяем размер к контейнеру новости
+            if (windowSize) {
+                // Проверяем, является ли устройство мобильным
+                const isMobile = window.innerWidth <= 768;
+                
+                if (isMobile) {
+                    // На мобильных устройствах сохраняем пропорции, но ограничиваем высоту
+                    const maxHeight = Math.min(windowSize.height, 600); // Максимальная высота 600px
+                    const aspectRatio = windowSize.width / windowSize.height;
+                    const calculatedWidth = Math.min(window.innerWidth - 40, windowSize.width); // Отступы 20px с каждой стороны
+                    const calculatedHeight = calculatedWidth / aspectRatio;
+                    
+                    newsItem.style.width = `${calculatedWidth}px`;
+                    newsItem.style.height = `${Math.min(calculatedHeight, maxHeight)}px`;
+                    newsItem.style.maxWidth = `${windowSize.width}px`;
+                    newsItem.style.maxHeight = `${maxHeight}px`;
+                } else {
+                    // На десктопе используем фиксированный размер
+                    newsItem.style.width = `${windowSize.width}px`;
+                    newsItem.style.height = `${windowSize.height}px`;
+                }
+                
+                newsItem.style.overflow = 'hidden';
+                newsItem.style.position = 'relative';
+                newsItem.style.margin = '0 auto';
+                newsItem.style.borderRadius = '16px';
+            }
+            
+            // Вставляем очищенный HTML контент новости
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'news-content';
+            if (windowSize) {
+                contentDiv.style.width = '100%';
+                contentDiv.style.height = '100%';
+                contentDiv.style.overflow = 'hidden';
+                // Сохраняем оригинальный размер для обработчика resize
+                contentDiv.dataset.originalSize = `${windowSize.width}x${windowSize.height}`;
+            }
+            contentDiv.innerHTML = cleanContent;
+            
+            newsItem.appendChild(contentDiv);
+            
+            // Заменяем индикатор загрузки на одну новость
+            newsContainer.innerHTML = '';
+            newsContainer.appendChild(newsItem);
+        } else {
+            // Если новостей нет
+            newsContainer.innerHTML = `
+                <div class="news-empty">
+                    <h3>Новостей пока нет</h3>
+                    <p>Следите за обновлениями!</p>
+                    <button onclick="loadNews()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: #2563eb; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                        Обновить
+                    </button>
+                </div>
+            `;
+        }
+
+        console.log(`Успешно загружено ${newsSnapshot.size} новостей`);
+
+    } catch (error) {
+        console.error('Ошибка при загрузке новостей:', error);
+        console.error('Детали ошибки:', error.message, error.code);
+        
+        // Показываем сообщение об ошибке с деталями
+        newsContainer.innerHTML = `
+            <div class="news-error">
+                <h3>Ошибка загрузки</h3>
+                <p>Не удалось загрузить новости: ${error.message}</p>
+                <p style="font-size: 0.9em; margin-top: 0.5rem;">Код ошибки: ${error.code || 'неизвестно'}</p>
+                <button onclick="loadNews()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: #2563eb; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                    Попробовать снова
+                </button>
+            </div>
+        `;
+    }
+}
+
+// Загружаем новости при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM загружен, ждем инициализации Firebase...');
+    // Загружаем новости после инициализации Firebase
+    setTimeout(() => {
+        console.log('Проверяем инициализацию Firebase...');
+        if (db) {
+            console.log('Firebase инициализирован, загружаем новости');
+            loadNews();
+        } else {
+            console.log('Firebase еще не инициализирован, ждем еще...');
+            setTimeout(loadNews, 2000);
+        }
+    }, 2000);
+});
+
+// Функция для обновления новостей (можно вызывать вручную)
+function refreshNews() {
+    loadNews();
+}
+
+// Функция для тестирования подключения к Firebase
+async function testFirebaseConnection() {
+    console.log('=== ТЕСТ ПОДКЛЮЧЕНИЯ К FIREBASE ===');
+    
+    try {
+        if (!db) {
+            console.error('❌ Firebase не инициализирован');
+            return false;
+        }
+        
+        console.log('✅ Firebase инициализирован');
+        
+        // Проверяем подключение к коллекции news
+        const testSnapshot = await db.collection('news').limit(1).get();
+        console.log('✅ Подключение к коллекции news успешно');
+        console.log('📊 Количество документов в коллекции:', testSnapshot.size);
+        
+        if (!testSnapshot.empty) {
+            const testDoc = testSnapshot.docs[0];
+            const testData = testDoc.data();
+            console.log('📄 Пример документа:', testDoc.id);
+            console.log('📋 Данные документа:', testData);
+            
+            // Проверяем наличие поля created
+            if (testData.created) {
+                console.log('📅 Поле created найдено:', testData.created);
+            } else {
+                console.log('⚠️ Поле created не найдено в документе');
+            }
+        }
+        
+        return true;
+        
+    } catch (error) {
+        console.error('❌ Ошибка подключения к Firebase:', error);
+        console.error('🔍 Детали ошибки:', error.message, error.code);
+        return false;
+    }
+}
+
+// Запускаем тест подключения через 3 секунды после загрузки страницы
+setTimeout(testFirebaseConnection, 3000);
+
+
+
+// Обработчик изменения размера окна для адаптации новостей
+let resizeTimeout;
+window.addEventListener('resize', function() {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(function() {
+        // Перезагружаем новость для применения новых размеров
+        const newsItem = document.querySelector('.news-item[style*="width"]');
+        if (newsItem) {
+            const content = newsItem.querySelector('.news-content');
+            if (content && content.dataset.originalSize) {
+                const [width, height] = content.dataset.originalSize.split('x').map(Number);
+                const isMobile = window.innerWidth <= 768;
+                
+                if (isMobile) {
+                    // На мобильных устройствах сохраняем пропорции, но ограничиваем высоту
+                    const maxHeight = Math.min(height, 600); // Максимальная высота 600px
+                    const aspectRatio = width / height;
+                    const calculatedWidth = Math.min(window.innerWidth - 40, width); // Отступы 20px с каждой стороны
+                    const calculatedHeight = calculatedWidth / aspectRatio;
+                    
+                    newsItem.style.width = `${calculatedWidth}px`;
+                    newsItem.style.height = `${Math.min(calculatedHeight, maxHeight)}px`;
+                    newsItem.style.maxWidth = `${width}px`;
+                    newsItem.style.maxHeight = `${maxHeight}px`;
+                } else {
+                    newsItem.style.width = `${width}px`;
+                    newsItem.style.height = `${height}px`;
+                }
+            }
+        }
+        
+
+    }, 250);
+});
+

@@ -428,6 +428,8 @@
         </div>
     </div>
 
+
+
     <!-- Комментарии и авторизация -->
     <div class="centered-sections">
       <div id="comments-section" style="max-width:500px;margin:2em auto;">
@@ -448,12 +450,23 @@
       <div>Ориентация: <span id="orientation">–</span></div>
     </div>
 
+    <!-- Новостной раздел -->
+    <section id="news" class="news-section">
+        <div class="container">
+            <h2 class="section__title">Новости</h2>
+            <div id="news-container" class="news-container">
+                <div class="news-loading">
+                    <div class="loading-spinner"></div>
+                    <p>Загрузка новостей...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Footer -->
     <footer class="footer">
-        <div class="container">
-            <p>&copy; <span id="current-year"></span> Права защищены MIT license</p>
-            <button id="toggle-dark-theme" class="theme-toggle-btn">🌙 Тёмная тема</button>
-        </div>
+        <p>&copy; <span id="current-year"></span> Права защищены MIT license</p>
+        <button id="toggle-dark-theme" class="theme-toggle-btn">🌙 Тёмная тема</button>
     </footer>
 
     <!-- Уведомления -->
