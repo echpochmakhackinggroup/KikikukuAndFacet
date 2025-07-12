@@ -1464,6 +1464,7 @@ async function updateCustomAuthUI() {
   const session = JSON.parse(localStorage.getItem('customUserSession') || 'null');
   const userName = document.getElementById('user-name');
   const userAvatarContainer = document.getElementById('user-avatar-container');
+  const avatarEditHint = document.getElementById('avatar-edit-hint');
   const authSection = document.getElementById('auth-section');
   const logoutBtn = document.getElementById('logout-btn');
   const privacyNote = document.querySelector('.user-privacy-note');
@@ -1479,6 +1480,35 @@ async function updateCustomAuthUI() {
       userAvatarContainer.style.display = '';
       // Обновляем аватарку
       await updateUserAvatarInUI(`custom_${session.username}`, userAvatarContainer);
+    }
+    if (avatarEditHint) {
+      // Проверяем, показывали ли мы уже подсказку
+      const hasShownHint = localStorage.getItem('avatarEditHintShown');
+      if (!hasShownHint) {
+        avatarEditHint.style.display = '';
+        avatarEditHint.style.opacity = '0.8';
+        // Устанавливаем флаг в localStorage
+        localStorage.setItem('avatarEditHintShown', 'true');
+        // Обратный отсчёт
+        const timerSpan = document.getElementById('avatar-hint-timer');
+        let secondsLeft = 5;
+        if (timerSpan) timerSpan.textContent = `(${secondsLeft})`;
+        const countdown = setInterval(() => {
+          secondsLeft--;
+          if (timerSpan) timerSpan.textContent = `(${secondsLeft})`;
+          if (secondsLeft <= 0) {
+            clearInterval(countdown);
+            if (avatarEditHint) {
+              avatarEditHint.style.opacity = '0';
+              setTimeout(() => {
+                if (avatarEditHint) {
+                  avatarEditHint.style.display = 'none';
+                }
+              }, 300);
+            }
+          }
+        }, 1000);
+      }
     }
     if (authSection) authSection.style.display = 'none';
     if (logoutBtn) logoutBtn.style.display = '';
@@ -1501,6 +1531,35 @@ async function updateCustomAuthUI() {
       // Обновляем аватарку
       await updateUserAvatarInUI(auth.currentUser.uid, userAvatarContainer);
     }
+    if (avatarEditHint) {
+      // Проверяем, показывали ли мы уже подсказку
+      const hasShownHint = localStorage.getItem('avatarEditHintShown');
+      if (!hasShownHint) {
+        avatarEditHint.style.display = '';
+        avatarEditHint.style.opacity = '0.8';
+        // Устанавливаем флаг в localStorage
+        localStorage.setItem('avatarEditHintShown', 'true');
+        // Обратный отсчёт
+        const timerSpan = document.getElementById('avatar-hint-timer');
+        let secondsLeft = 5;
+        if (timerSpan) timerSpan.textContent = `(${secondsLeft})`;
+        const countdown = setInterval(() => {
+          secondsLeft--;
+          if (timerSpan) timerSpan.textContent = `(${secondsLeft})`;
+          if (secondsLeft <= 0) {
+            clearInterval(countdown);
+            if (avatarEditHint) {
+              avatarEditHint.style.opacity = '0';
+              setTimeout(() => {
+                if (avatarEditHint) {
+                  avatarEditHint.style.display = 'none';
+                }
+              }, 300);
+            }
+          }
+        }, 1000);
+      }
+    }
     if (authSection) authSection.style.display = 'none';
     if (logoutBtn) logoutBtn.style.display = '';
     if (privacyNote && privacyNoteContainer) {
@@ -1520,6 +1579,9 @@ async function updateCustomAuthUI() {
     if (userAvatarContainer) {
       userAvatarContainer.innerHTML = '';
       userAvatarContainer.style.display = 'none';
+    }
+    if (avatarEditHint) {
+      avatarEditHint.style.display = 'none';
     }
     if (authSection) authSection.style.display = '';
     if (logoutBtn) logoutBtn.style.display = 'none';

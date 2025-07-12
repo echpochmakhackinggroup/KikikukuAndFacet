@@ -2337,6 +2337,38 @@ body.dark-theme .avatar-preview h3 {
   height: 55% !important;
 }
 
+/* Стили для подсказки редактирования аватарки */
+#avatar-edit-hint {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+#avatar-edit-hint:hover {
+  opacity: 1 !important;
+  transform: translate(-50%, -50%) scale(1.02);
+}
+
+/* Темная тема для подсказки */
+body.dark-theme #avatar-edit-hint {
+  color: #ccc !important;
+}
+
+body.dark-theme #avatar-edit-hint span {
+  background: rgba(102, 126, 234, 0.15) !important;
+  border-color: rgba(102, 126, 234, 0.3) !important;
+}
+
+/* Анимация появления подсказки */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -30%);
+  }
+  to {
+    opacity: 0.8;
+    transform: translate(-50%, -50%);
+  }
+}
+
 body.dark-theme #avatar-preview-container {
   background: rgba(255, 255, 255, 0.05);
 }
@@ -2589,6 +2621,15 @@ body.dark-theme .action-btn.secondary:hover {
   #avatar-preview-container .user-avatar > div {
     width: 70% !important;
     height: 70% !important;
+  }
+  
+  /* Адаптивность подсказки редактирования на мобильных */
+  #avatar-edit-hint {
+    font-size: 0.8em !important;
+  }
+  
+  #avatar-edit-hint span {
+    padding: 6px 10px !important;
   }
 }
 
