@@ -4335,12 +4335,15 @@ window.addEventListener('resize', function() {
   function updateInputPositions() {
     if (!window.visualViewport) return;
     
+    // Новый способ вычисления высоты клавиатуры
     const viewportHeight = window.visualViewport.height;
     const windowHeight = window.innerHeight;
-    const keyboardHeight = windowHeight - viewportHeight;
+    const offsetTop = window.visualViewport.offsetTop || 0;
+    let keyboardHeight = windowHeight - viewportHeight - offsetTop;
+    if (keyboardHeight < 0) keyboardHeight = 0;
     
-    // Если клавиатура видна (высота больше 150px)
-    if (keyboardHeight > 150) {
+    // Если клавиатура видна (высота больше 100px)
+    if (keyboardHeight > 100) {
       document.body.classList.add('keyboard-visible');
       document.documentElement.style.setProperty('--keyboard-offset', `${keyboardHeight}px`);
       
