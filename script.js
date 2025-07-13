@@ -3710,6 +3710,12 @@ async function loadNews() {
             // Заменяем индикатор загрузки на одну новость
             newsContainer.innerHTML = '';
             newsContainer.appendChild(newsItem);
+            
+            // Инициализируем анимации для загруженной новости
+            setTimeout(() => {
+                initNewsAnimations();
+                initSmoothScrolling();
+            }, 100);
         } else {
             // Если новостей нет
             newsContainer.innerHTML = `
@@ -3741,6 +3747,309 @@ async function loadNews() {
             </div>
         `;
     }
+}
+
+// === NEWS ANIMATION SYSTEM ===
+// Функции для работы с анимированными новостями
+
+// Инициализация анимаций для новостей
+function initNewsAnimations() {
+    console.log('Инициализация анимаций для новостей...');
+    
+    // Загружаем GSAP если не подключен
+    if (typeof gsap === 'undefined') {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js';
+        script.onload = () => {
+            const scrollTriggerScript = document.createElement('script');
+            scrollTriggerScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js';
+            scrollTriggerScript.onload = () => {
+                gsap.registerPlugin(ScrollTrigger);
+                initNewsAnimationComponents();
+            };
+            document.head.appendChild(scrollTriggerScript);
+        };
+        document.head.appendChild(script);
+    } else {
+        initNewsAnimationComponents();
+    }
+}
+
+// Инициализация компонентов анимаций
+function initNewsAnimationComponents() {
+    initAnimatedBlocks();
+    initScrollAnimations();
+    initModalTriggers();
+    initCustomJS();
+    initDefaultAnimations();
+}
+
+// Анимированные блоки
+function initAnimatedBlocks() {
+    document.querySelectorAll('.news-animated').forEach(block => {
+        const animationType = block.dataset.animation || 'fadeIn';
+        const duration = parseFloat(block.dataset.duration) || 1;
+        const delay = parseFloat(block.dataset.delay) || 0;
+        const ease = block.dataset.ease || 'power2.out';
+        const trigger = block.dataset.trigger || 'onLoad';
+
+        // Устанавливаем начальное состояние
+        setInitialState(block, animationType);
+
+        // Применяем анимацию в зависимости от триггера
+        if (trigger === 'onLoad') {
+            gsap.to(block, {
+                duration: duration,
+                delay: delay,
+                ease: ease,
+                opacity: 1,
+                y: 0,
+                scale: 1,
+                rotation: 0
+            });
+        } else if (trigger === 'onClick') {
+            block.style.cursor = 'pointer';
+            block.addEventListener('click', () => {
+                gsap.to(block, {
+                    duration: duration,
+                    ease: ease,
+                    opacity: 1,
+                    y: 0,
+                    scale: 1,
+                    rotation: 0
+                });
+            });
+        } else if (trigger === 'onHover') {
+            block.addEventListener('mouseenter', () => {
+                gsap.to(block, {
+                    duration: duration,
+                    ease: ease,
+                    opacity: 1,
+                    y: 0,
+                    scale: 1,
+                    rotation: 0
+                });
+            });
+        }
+    });
+}
+
+// Анимации при прокрутке
+function initScrollAnimations() {
+    document.querySelectorAll('.news-scroll-animation').forEach(block => {
+        const animationType = block.dataset.animation || 'fadeIn';
+        const duration = parseFloat(block.dataset.duration) || 1;
+        const threshold = parseFloat(block.dataset.threshold) || 0.5;
+        const ease = block.dataset.ease || 'power2.out';
+
+        // Устанавливаем начальное состояние
+        setInitialState(block, animationType);
+
+        // Создаем триггер прокрутки
+        gsap.to(block, {
+            scrollTrigger: {
+                trigger: block,
+                start: 'top 80%',
+                end: 'bottom 20%',
+                toggleActions: 'play none none reverse'
+            },
+            duration: duration,
+            ease: ease,
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            rotation: 0
+        });
+    });
+}
+
+// Установка начального состояния для анимаций
+function setInitialState(element, animationType) {
+    switch(animationType) {
+        case 'fadeIn':
+            element.style.opacity = '0';
+            break;
+        case 'slideInUp':
+            element.style.opacity = '0';
+            element.style.transform = 'translateY(50px)';
+            break;
+        case 'slideInDown':
+            element.style.opacity = '0';
+            element.style.transform = 'translateY(-50px)';
+            break;
+        case 'slideInLeft':
+            element.style.opacity = '0';
+            element.style.transform = 'translateX(-50px)';
+            break;
+        case 'slideInRight':
+            element.style.opacity = '0';
+            element.style.transform = 'translateX(50px)';
+            break;
+        case 'scaleIn':
+            element.style.opacity = '0';
+            element.style.transform = 'scale(0.5)';
+            break;
+        case 'rotateIn':
+            element.style.opacity = '0';
+            element.style.transform = 'rotate(-180deg) scale(0.5)';
+            break;
+        case 'bounceIn':
+            element.style.opacity = '0';
+            element.style.transform = 'scale(0.3)';
+            break;
+    }
+}
+
+// Инициализация модальных триггеров
+function initModalTriggers() {
+    document.querySelectorAll('.modal-trigger-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const title = this.dataset.modalTitle || 'Модальное окно';
+            const content = this.dataset.modalContent || 'Содержимое модального окна...';
+            const size = this.dataset.modalSize || 'medium';
+            
+            showNewsModal(title, content, size);
+        });
+    });
+}
+
+// Показ модального окна
+function showNewsModal(title, content, size) {
+    // Создаем оверлей модального окна
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.style.display = 'flex';
+    
+    // Создаем содержимое модального окна
+    const modalContent = document.createElement('div');
+    modalContent.className = `modal-content ${size}`;
+    modalContent.innerHTML = `
+        <div class="modal-header">
+            <h3>${title}</h3>
+            <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            ${content}
+        </div>
+    `;
+    
+    overlay.appendChild(modalContent);
+    document.body.appendChild(overlay);
+    
+    // Добавляем функциональность закрытия
+    const closeBtn = modalContent.querySelector('.modal-close');
+    closeBtn.addEventListener('click', () => {
+        document.body.removeChild(overlay);
+    });
+    
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+            document.body.removeChild(overlay);
+        }
+    });
+    
+    // Анимируем появление модального окна
+    if (typeof gsap !== 'undefined') {
+        gsap.fromTo(modalContent, 
+            { scale: 0.8, opacity: 0 },
+            { scale: 1, opacity: 1, duration: 0.3, ease: 'back.out' }
+        );
+    }
+}
+
+// Инициализация пользовательского JavaScript
+function initCustomJS() {
+    document.querySelectorAll('.news-custom-js').forEach(block => {
+        const trigger = block.dataset.trigger || 'onLoad';
+        const code = decodeURIComponent(block.dataset.code || '');
+        
+        if (!code) return;
+        
+        if (trigger === 'onLoad') {
+            try {
+                eval(code);
+            } catch (error) {
+                console.error('Ошибка в пользовательском JS:', error);
+            }
+        } else if (trigger === 'onClick') {
+            block.style.cursor = 'pointer';
+            block.addEventListener('click', () => {
+                try {
+                    eval(code);
+                } catch (error) {
+                    console.error('Ошибка в пользовательском JS:', error);
+                }
+            });
+        } else if (trigger === 'onScroll') {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        try {
+                            eval(code);
+                        } catch (error) {
+                            console.error('Ошибка в пользовательском JS:', error);
+                        }
+                        observer.unobserve(entry.target);
+                    }
+                });
+            });
+            observer.observe(block);
+        } else if (trigger === 'onHover') {
+            block.addEventListener('mouseenter', () => {
+                try {
+                    eval(code);
+                } catch (error) {
+                    console.error('Ошибка в пользовательском JS:', error);
+                }
+            });
+        }
+    });
+}
+
+// Стандартные анимации
+function initDefaultAnimations() {
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                if (typeof gsap !== 'undefined') {
+                    gsap.to(entry.target, {
+                        opacity: 1,
+                        y: 0,
+                        duration: 0.6,
+                        ease: 'power2.out'
+                    });
+                }
+            }
+        });
+    }, observerOptions);
+
+    // Наблюдаем за всеми элементами контента
+    document.querySelectorAll('.news-title, .news-subtitle, .news-text, .news-image, .news-video, .news-button, .news-link, .news-quote, .news-stats, .news-gallery').forEach(el => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(20px)';
+        observer.observe(el);
+    });
+}
+
+// Плавная прокрутка для якорных ссылок
+function initSmoothScrolling() {
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
 }
 
 // Загружаем новости при загрузке страницы
