@@ -57,6 +57,7 @@
                 <div class="about__text">
                     <p>Мы команда непрофессионалов, создающая игру и делающие кучу всяких других крутых штук. Наш подход основан на креативности, технологиях и внимании к деталям, особенно к деталямк опчткам.</p>
                     <p>Каждый проект для нас - это возможность создать что-то уникальное и...      и все.</p>
+                    
                 </div>
                 <div class="about__stats">
                     <div class="stat" data-modal="projects">
@@ -72,7 +73,7 @@
                         <p><span id="experience-days-word"></span> опыта</p>
                     </div>
                 </div>
-
+                
                 <!-- Модальные окна для статистики -->
                 <div id="modal-projects" class="modal">
                     <div class="modal__content">
@@ -413,10 +414,10 @@
         </div>
         
         <!-- Форма отправки сообщения -->
-        <div class="chat-input-container" style="position:absolute;bottom:0;left:0;width:100%;padding:1rem;background:rgba(255,255,255,0.95);backdrop-filter:blur(10px);border-top:1px solid rgba(0,0,0,0.1);">
-          <form id="chat-form" style="display:flex;gap:0.5rem;">
-            <input type="text" id="chat-input" placeholder="Введите сообщение..." style="flex:1;padding:0.8rem;border:1px solid rgba(0,0,0,0.2);border-radius:20px;font-size:0.9em;outline:none;" required>
-            <button type="submit" style="padding:0.8rem 1.2rem;background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);color:#fff;border:none;border-radius:20px;font-size:0.9em;cursor:pointer;transition:all 0.3s;">📤</button>
+        <div class="chat-input-container">
+          <form id="chat-form">
+            <input type="text" id="chat-input" placeholder="Введите сообщение..." required>
+            <button type="submit">📤</button>
           </form>
         </div>
       </div>
@@ -494,6 +495,20 @@
         </div>
     </div>
 
+    <!-- Модальное окно для личного чата (fullscreen) -->
+    <div id="private-chat-modal" class="private-chat-modal">
+      <div class="private-chat-header">
+        <button class="private-chat-back" aria-label="Назад">←</button>
+        <span class="private-chat-title"></span>
+      </div>
+      <div class="private-chat-messages"></div>
+      <div class="private-chat-input-container">
+        <form id="private-chat-form">
+          <input type="text" id="private-chat-input" placeholder="Введите сообщение..." required>
+          <button type="submit">📤</button>
+        </form>
+      </div>
+    </div>
 
 
     <!-- Комментарии и авторизация -->

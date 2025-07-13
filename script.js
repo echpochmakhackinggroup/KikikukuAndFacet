@@ -2502,6 +2502,16 @@ function switchChatType(type) {
   const usersList = document.getElementById('chat-users-list');
   const myChatsList = document.getElementById('chat-my-chats-list');
   const chatInfo = document.getElementById('chat-info');
+  const chatInputContainer = document.querySelector('.chat-input-container');
+  
+  // Показывать поле ввода только для общего чата
+  if (chatInputContainer) {
+    if (type === 'general') {
+      chatInputContainer.style.display = '';
+    } else {
+      chatInputContainer.style.display = 'none';
+    }
+  }
   
   // Обновляем кнопки
   generalBtn.classList.toggle('active', type === 'general');
@@ -2809,16 +2819,8 @@ function selectChatUser(userId, userName) {
     selectedElement.classList.add('selected');
   }
   
-  // Обновляем информацию о чате
-  const chatInfo = document.getElementById('chat-info');
-  chatInfo.textContent = `👤 Личное сообщение: ${userName}`;
-  chatInfo.style.color = '#667eea';
-  
-  // Отмечаем личные сообщения как прочитанные
-  markPrivateMessagesAsRead(userId);
-  
-  // Загружаем личные сообщения
-  loadPrivateMessages(userId);
+  // Открываем полноэкранный чат
+  window.openPrivateChatModal(userId, userName);
 }
 
 // Загрузка личных сообщений
@@ -3008,8 +3010,13 @@ async function createMyChatElement(chat) {
   chatDiv.appendChild(infoDiv);
   
   // Обработчик клика
-  chatDiv.addEventListener('click', () => {
-    selectMyChat(chat);
+  chatDiv.addEventListener('click', async () => {
+    if (chat.type === 'general') {
+      selectMyChat(chat);
+    } else {
+      const userName = await getUserNameByUid(chat.participantId);
+      window.openPrivateChatModal(chat.participantId, userName);
+    }
   });
   
   return chatDiv;
@@ -4207,4 +4214,221 @@ window.addEventListener('resize', function() {
 
     }, 250);
 });
+
+// ===== Полноэкранный личный чат (My Chats) =====
+(function setupPrivateChatModal() {
+  const modal = document.getElementById('private-chat-modal');
+  const messagesDiv = modal.querySelector('.private-chat-messages');
+  const titleSpan = modal.querySelector('.private-chat-title');
+  const backBtn = modal.querySelector('.private-chat-back');
+  const input = modal.querySelector('#private-chat-input');
+  const form = modal.querySelector('#private-chat-form');
+
+  let currentChat = null; // {participantId, participantName}
+
+  // Открыть модалку
+  window.openPrivateChatModal = async function(participantId, participantName) {
+    currentChat = {participantId, participantName};
+    titleSpan.textContent = participantName;
+    modal.classList.add('open');
+    messagesDiv.innerHTML = '<div style="text-align:center;color:#888;padding:1.5em;">Загрузка...</div>';
+    input.value = '';
+    input.focus();
+    await renderPrivateChatHistory(participantId);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  };
+
+  // Закрыть модалку
+  function closeModal() {
+    modal.classList.remove('open');
+    messagesDiv.innerHTML = '';
+    currentChat = null;
+  }
+  backBtn.addEventListener('click', closeModal);
+
+  // Отправка сообщения
+  form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const text = input.value.trim();
+    if (!text || !currentChat) return;
+    const currentUser = auth.currentUser;
+    const customSession = JSON.parse(localStorage.getItem('customUserSession') || 'null');
+    if (!currentUser && !customSession) {
+      showNotification('Войдите в систему для отправки сообщений', 'warning');
+      return;
+    }
+    try {
+      const currentUserId = currentUser ? currentUser.uid : `custom_${customSession.username}`;
+      const messageData = {
+        text,
+        from: currentUser ? (currentUser.displayName || currentUser.email) : customSession.username,
+        senderId: currentUserId,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        type: 'private',
+        to: currentChat.participantId,
+        toName: currentChat.participantName,
+        participants: [currentUserId, currentChat.participantId].sort()
+      };
+      await db.collection('messages').add(messageData);
+      input.value = '';
+      await renderPrivateChatHistory(currentChat.participantId);
+      setTimeout(()=>{messagesDiv.scrollTop = messagesDiv.scrollHeight;}, 100);
+    } catch (error) {
+      showNotification('Ошибка отправки сообщения', 'error');
+    }
+  });
+
+  // Рендер истории
+  async function renderPrivateChatHistory(participantId) {
+    try {
+      const currentUser = auth.currentUser;
+      const customSession = JSON.parse(localStorage.getItem('customUserSession') || 'null');
+      const currentUserId = currentUser ? currentUser.uid : `custom_${customSession?.username}`;
+      if (!currentUserId) return;
+      const messagesSnapshot = await db.collection('messages')
+        .orderBy('timestamp', 'asc')
+        .limit(200)
+        .get();
+      messagesDiv.innerHTML = '';
+      for (const doc of messagesSnapshot.docs) {
+        const messageData = doc.data();
+        if (messageData.type === 'private' && messageData.participants &&
+            messageData.participants.includes(currentUserId) && messageData.participants.includes(participantId)) {
+          const div = document.createElement('div');
+          div.className = 'chat-message ' + (messageData.senderId === currentUserId ? 'sent' : 'received');
+          const timestamp = messageData.timestamp ? new Date(messageData.timestamp.toDate()) : new Date();
+          const timeString = timestamp.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+          div.innerHTML = `
+            <div class="chat-message-header">${messageData.senderId === currentUserId ? 'Вы' : (messageData.from || 'Пользователь')}</div>
+            <div class="chat-message-text">${messageData.text}</div>
+            <div class="chat-message-time">${timeString}</div>
+          `;
+          messagesDiv.appendChild(div);
+        }
+      }
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    } catch (error) {
+      messagesDiv.innerHTML = '<div style="color:#c00;text-align:center;padding:1em;">Ошибка загрузки истории</div>';
+    }
+  }
+})();
+
+// ===== Универсальная система обработки клавиатуры на мобильных =====
+(function setupMobileKeyboardHandling() {
+  // Проверяем, что мы на мобильном устройстве
+  const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+  if (!isMobile) return;
+
+  // Все поля ввода, которые нужно обрабатывать
+  const inputSelectors = [
+    '#chat-input',
+    '#private-chat-input', 
+    '#comment-input',
+    '.form-group input',
+    'textarea'
+  ];
+
+  // Находим все поля ввода
+  const inputs = document.querySelectorAll(inputSelectors.join(','));
+  
+  // Функция для обновления позиции полей ввода
+  function updateInputPositions() {
+    if (!window.visualViewport) return;
+    
+    const viewportHeight = window.visualViewport.height;
+    const windowHeight = window.innerHeight;
+    const keyboardHeight = windowHeight - viewportHeight;
+    
+    // Если клавиатура видна (высота больше 150px)
+    if (keyboardHeight > 150) {
+      document.body.classList.add('keyboard-visible');
+      document.documentElement.style.setProperty('--keyboard-offset', `${keyboardHeight}px`);
+      
+      // Находим активное поле ввода
+      const activeInput = document.activeElement;
+      if (activeInput && (activeInput.tagName === 'INPUT' || activeInput.tagName === 'TEXTAREA')) {
+        // Прокручиваем к активному полю ввода
+        setTimeout(() => {
+          activeInput.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center',
+            inline: 'nearest'
+          });
+        }, 100);
+      }
+    } else {
+      document.body.classList.remove('keyboard-visible');
+      document.documentElement.style.setProperty('--keyboard-offset', '0px');
+    }
+  }
+
+  // Обработчик изменения viewport
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', updateInputPositions);
+  }
+
+  // Обработчики фокуса и потери фокуса для полей ввода
+  function handleInputFocus(e) {
+    if (!window.visualViewport) return;
+    
+    // Небольшая задержка для корректного определения высоты клавиатуры
+    setTimeout(updateInputPositions, 100);
+  }
+
+  function handleInputBlur(e) {
+    // Небольшая задержка перед скрытием клавиатуры
+    setTimeout(() => {
+      if (!window.visualViewport) return;
+      
+      const viewportHeight = window.visualViewport.height;
+      const windowHeight = window.innerHeight;
+      const keyboardHeight = windowHeight - viewportHeight;
+      
+      // Если клавиатура скрыта, убираем классы
+      if (keyboardHeight <= 150) {
+        document.body.classList.remove('keyboard-visible');
+        document.documentElement.style.setProperty('--keyboard-offset', '0px');
+      }
+    }, 300);
+  }
+
+  // Добавляем обработчики для всех полей ввода
+  inputs.forEach(input => {
+    input.addEventListener('focus', handleInputFocus);
+    input.addEventListener('blur', handleInputBlur);
+  });
+
+  // Обработчик для динамически добавляемых полей ввода
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      mutation.addedNodes.forEach((node) => {
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          const newInputs = node.querySelectorAll ? node.querySelectorAll(inputSelectors.join(',')) : [];
+          newInputs.forEach(input => {
+            input.addEventListener('focus', handleInputFocus);
+            input.addEventListener('blur', handleInputBlur);
+          });
+        }
+      });
+    });
+  });
+
+  // Наблюдаем за изменениями в DOM
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+
+  // Обработчик изменения ориентации экрана
+  window.addEventListener('orientationchange', () => {
+    setTimeout(updateInputPositions, 500);
+  });
+
+  // Обработчик изменения размера окна
+  window.addEventListener('resize', () => {
+    setTimeout(updateInputPositions, 100);
+  });
+
+  console.log('Мобильная обработка клавиатуры инициализирована');
+})();
 
