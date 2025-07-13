@@ -28,6 +28,7 @@
             <ul class="nav__menu">
                 <li><a href="#home">Главная</a></li>
                 <li><span class="nav-menu-link" style="cursor:pointer;">Меню</span></li>
+                <li><span class="nav-chat-link" style="cursor:pointer;position:relative;">чат<span id="chat-notification-badge" class="chat-notification-badge" style="display:none;">0</span></span></li>
             </ul>
             <div class="nav__burger">
                 <span></span>
@@ -41,7 +42,7 @@
     <section id="home" class="hero">
         <div class="hero__content">
             <h1 class="hero__title">KikikukuAndFacet</h1>
-            <p class="hero__subtitle">материальное обновление!</p>
+            <p class="hero__subtitle">социальновое обновление</p>
         </div>
         <div class="hero__image">
             <div class="hero__shape"></div>
@@ -265,6 +266,15 @@
                 </div>
                 <p>стеклянные плиты будут переливаться и отражаться при помощи гироскопа или мышки</p>
                 
+                <div style="margin:2em 0;display:flex;align-items:center;gap:1em;justify-content:center;">
+                    <label for="auto-theme-toggle" style="font-size:1.1em;cursor:pointer;user-select:none;">Автоматическая тёмная тема</label>
+                    <label class="switch">
+                      <input type="checkbox" id="auto-theme-toggle">
+                      <span class="slider"></span>
+                    </label>
+                </div>
+                <p>автоматически переключать на тёмную тему вечером и ночью (с 18:00 до 7:00)</p>
+                
 
                 
             </div>
@@ -352,6 +362,62 @@
         <div class="side-menu__privacy-note" style="position:absolute;bottom:32px;left:0;width:100%;text-align:center;"></div>
         <div class="side-menu__bottom-link" style="position:absolute;bottom:0;left:0;width:100%;text-align:center;">
           <span class="nav-experimental-link" data-modal="experimental" style="cursor:pointer;">Экспериментальные функции</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Чат -->
+    <div id="chat-sidebar" class="chat-sidebar">
+      <div class="chat-sidebar__content">
+        <span class="chat-sidebar__close" style="cursor:pointer;font-size:2em;position:absolute;top:18px;right:24px;">&times;</span>
+        
+        <!-- Заголовок чата -->
+        <div class="chat-header" style="width:100%;text-align:center;font-size:1.2em;font-weight:bold;margin:2.2em 0 1.2em 0;">
+          💬 Чат
+        </div>
+        
+        <!-- Переключатель типа чата -->
+        <div class="chat-type-switcher" style="display:flex;gap:0.3rem;margin-bottom:1rem;padding:0 1rem;">
+          <button id="chat-general-btn" class="chat-type-btn active" style="flex:1;padding:0.5rem;border:1px solid rgba(0,0,0,0.2);border-radius:8px;background:#667eea;color:white;cursor:pointer;font-size:0.8em;">Общий</button>
+          <button id="chat-private-btn" class="chat-type-btn" style="flex:1;padding:0.5rem;border:1px solid rgba(0,0,0,0.2);border-radius:8px;background:transparent;color:#333;cursor:pointer;font-size:0.8em;">Личные</button>
+          <button id="chat-my-btn" class="chat-type-btn" style="flex:1;padding:0.5rem;border:1px solid rgba(0,0,0,0.2);border-radius:8px;background:transparent;color:#333;cursor:pointer;font-size:0.8em;">Мои чаты</button>
+        </div>
+        
+        <!-- Список пользователей для личных сообщений -->
+        <div id="chat-users-list" class="chat-users-list" style="display:none;margin-bottom:1rem;padding:0 1rem;">
+          <div class="chat-users-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+            <span style="font-weight:bold;color:#666;">Выберите пользователя:</span>
+            <button id="refresh-users-btn" style="background:none;border:none;color:#667eea;cursor:pointer;font-size:0.8em;padding:2px 6px;border-radius:4px;" title="Обновить список">🔄</button>
+          </div>
+          <div id="chat-users-container" class="chat-users-container">
+            <!-- Пользователи будут добавляться динамически -->
+          </div>
+        </div>
+        
+        <!-- Список чатов для раздела "Мои чаты" -->
+        <div id="chat-my-chats-list" class="chat-my-chats-list" style="display:none;max-height:200px;overflow-y:auto;margin-bottom:1rem;padding:0 1rem;">
+          <div class="chat-my-chats-header" style="font-weight:bold;margin-bottom:0.5rem;color:#666;">Мои чаты:</div>
+          <div id="chat-my-chats-container" class="chat-my-chats-container">
+            <!-- Чаты будут добавляться динамически -->
+          </div>
+        </div>
+        
+        <!-- Информация о текущем чате -->
+        <div id="chat-info" class="chat-info" style="padding:0 1rem;margin-bottom:1rem;font-size:0.9em;color:#666;">
+          💬 Общий чат
+        </div>
+        
+        <!-- Список сообщений -->
+        <div id="chat-messages" class="chat-messages" style="flex:1;overflow-y:auto;padding:1rem;margin-bottom:1rem;">
+          <!-- Сообщения будут добавляться динамически -->
+        </div>
+        
+        <!-- Форма отправки сообщения -->
+        <div class="chat-input-container" style="position:absolute;bottom:0;left:0;width:100%;padding:1rem;background:rgba(255,255,255,0.95);backdrop-filter:blur(10px);border-top:1px solid rgba(0,0,0,0.1);">
+          <form id="chat-form" style="display:flex;gap:0.5rem;">
+            <input type="text" id="chat-input" placeholder="Введите сообщение..." style="flex:1;padding:0.8rem;border:1px solid rgba(0,0,0,0.2);border-radius:20px;font-size:0.9em;outline:none;" required>
+            <button type="submit" style="padding:0.8rem 1.2rem;background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);color:#fff;border:none;border-radius:20px;font-size:0.9em;cursor:pointer;transition:all 0.3s;">📤</button>
+          </form>
         </div>
       </div>
     </div>
@@ -466,7 +532,6 @@
     <!-- Footer -->
     <footer class="footer">
         <p>&copy; <span id="current-year"></span> Права защищены MIT license</p>
-        <button id="toggle-dark-theme" class="theme-toggle-btn">🌙 Тёмная тема</button>
     </footer>
 
     <!-- Уведомления -->
