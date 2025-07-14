@@ -322,27 +322,45 @@
                 <h2>Экспериментальные функции</h2>
             </div>
             <div class="modal__body">
-                <div style="margin:2em 0;display:flex;align-items:center;gap:1em;justify-content:center;">
-                    <label for="reflection-toggle" style="font-size:1.1em;cursor:pointer;user-select:none;">Отражения</label>
-                    <label class="switch">
-                      <input type="checkbox" id="reflection-toggle">
-                      <span class="slider"></span>
-                    </label>
-                    <button id="get-orientation" style="display:none;margin-left:1em;">□</button>
+                <!-- Дублируем экспериментальные функции -->
+                <div class="experimental-grid">
+                  <div class="experimental-card">
+                    <div class="experimental-icon">🌙</div>
+                    <h3>Автоматическая тема</h3>
+                    <p>Автоматическое переключение между светлой и тёмной темой в зависимости от времени суток</p>
+                    <button class="experimental-btn" onclick="toggleAutoTheme()">Включить</button>
+                  </div>
+                  <div class="experimental-card">
+                    <div class="experimental-icon">🎨</div>
+                    <h3>Эффект отражения</h3>
+                    <p>Интерактивные отражения на карточках, реагирующие на движение мыши</p>
+                    <button class="experimental-btn" onclick="toggleReflectionEffect()">Включить</button>
+                  </div>
+                  <div class="experimental-card">
+                    <div class="experimental-icon">📱</div>
+                    <h3>Гироскоп</h3>
+                    <p>Управление эффектами с помощью гироскопа на мобильных устройствах</p>
+                    <button class="experimental-btn" onclick="toggleGyro()">Включить</button>
+                  </div>
+                  <div class="experimental-card">
+                    <div class="experimental-icon">⚡</div>
+                    <h3>Быстрые анимации</h3>
+                    <p>Ускоренные анимации для более динамичного интерфейса</p>
+                    <button class="experimental-btn" onclick="toggleFastAnimations()">Включить</button>
+                  </div>
+                  <div class="experimental-card">
+                    <div class="experimental-icon">🎯</div>
+                    <h3>Точные курсоры</h3>
+                    <p>Улучшенная точность курсора для более точного взаимодействия</p>
+                    <button class="experimental-btn" onclick="togglePreciseCursor()">Включить</button>
+                  </div>
+                  <div class="experimental-card">
+                    <div class="experimental-icon">🔧</div>
+                    <h3>Настройки базы данных</h3>
+                    <p>Настроить Firebase для работы с комментариями, чатом и новостями</p>
+                    <button class="experimental-btn primary" onclick="resetDatabaseConfig()">Настроить</button>
+                  </div>
                 </div>
-                <p>стеклянные плиты будут переливаться и отражаться при помощи гироскопа или мышки</p>
-                
-                <div style="margin:2em 0;display:flex;align-items:center;gap:1em;justify-content:center;">
-                    <label for="auto-theme-toggle" style="font-size:1.1em;cursor:pointer;user-select:none;">Автоматическая тёмная тема</label>
-                    <label class="switch">
-                      <input type="checkbox" id="auto-theme-toggle">
-                      <span class="slider"></span>
-                    </label>
-                </div>
-                <p>автоматически переключать на тёмную тему вечером и ночью (с 18:00 до 7:00)</p>
-                
-
-                
             </div>
         </div>
     </div>

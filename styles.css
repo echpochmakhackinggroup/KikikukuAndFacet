@@ -360,7 +360,7 @@
     height: 20px;
     background: radial-gradient(circle, #667eea 0%, #764ba2 100%);
     border-radius: 50%;
-    pointer-events: none;
+    pointer-events: none !important;
     z-index: 10000;
     transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
@@ -4642,5 +4642,105 @@ body.dark-theme .modal-close:hover {
   60% { transform: translateX(-2px) rotate(-1deg); }
   80% { transform: translateX(2px) rotate(1deg); }
   100% { transform: translateX(0); }
+}
+
+/* Улучшенное отображение экспериментальных функций в модалке */
+.modal__body .experimental-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 2rem;
+  margin: 2.5rem 0 1.5rem 0;
+  padding: 0 0.5rem;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.modal__body .experimental-card {
+  background: rgba(255,255,255,0.95);
+  border-radius: 18px;
+  box-shadow: 0 4px 24px rgba(38,99,235,0.08);
+  border: 1.5px solid #e3e8f7;
+  padding: 1.5rem 1.2rem 1.2rem 1.2rem;
+  text-align: center;
+  transition: all 0.25s cubic-bezier(.4,0,.2,1);
+  color: #222;
+  min-width: 0;
+}
+.modal__body .experimental-card .experimental-icon {
+  font-size: 2.2rem;
+  margin-bottom: 0.7rem;
+  display: block;
+}
+.modal__body .experimental-card h3 {
+  font-size: 1.15rem;
+  margin-bottom: 0.5rem;
+  color: #1f2937;
+}
+.modal__body .experimental-card p {
+  color: #6b7280;
+  font-size: 0.98rem;
+  margin-bottom: 1.1rem;
+}
+@media (max-width: 600px) {
+  .modal__body .experimental-grid {
+    grid-template-columns: 1fr;
+    gap: 1.2rem;
+    max-height: 50vh;
+  }
+  .modal__body .experimental-card {
+    padding: 1.1rem 0.7rem;
+  }
+}
+
+/* Яркие кнопки экспериментальных функций в модалке */
+.modal__body .experimental-btn {
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  padding: 0.7em 1.5em;
+  margin-top: 0.7em;
+  margin-bottom: 0.2em;
+  box-shadow: 0 2px 8px rgba(102,126,234,0.10);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(.4,0,.2,1);
+  outline: none;
+  position: relative;
+  z-index: 1;
+}
+.modal__body .experimental-btn:hover,
+.modal__body .experimental-btn:focus {
+  background: linear-gradient(90deg, #5a6fd8 0%, #6a4190 100%);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(102,126,234,0.18);
+  transform: translateY(-2px) scale(1.04);
+}
+/* Особый стиль для кнопки точных курсоров */
+.modal__body .experimental-card:nth-child(5) .experimental-btn {
+  background: linear-gradient(90deg, #ff6b6b 0%, #ee5a24 100%);
+  color: #fff;
+  border: none;
+}
+.modal__body .experimental-card:nth-child(5) .experimental-btn:hover,
+.modal__body .experimental-card:nth-child(5) .experimental-btn:focus {
+  background: linear-gradient(90deg, #ff8a65 0%, #ff7043 100%);
+  color: #fff;
+}
+
+.modal__body .experimental-btn:active {
+  background: linear-gradient(90deg, #5a6fd8 0%, #6a4190 100%) !important;
+  color: #fff !important;
+  box-shadow: 0 2px 8px rgba(102,126,234,0.18);
+  transform: scale(0.98);
+}
+.modal__body .experimental-card:nth-child(5) .experimental-btn:active {
+  background: linear-gradient(90deg, #ff8a65 0%, #ff7043 100%) !important;
+  color: #fff !important;
+}
+
+.precise-cursor .modal__close {
+    cursor: pointer !important;
+    pointer-events: auto !important;
 }
 

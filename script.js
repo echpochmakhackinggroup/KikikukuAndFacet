@@ -513,11 +513,11 @@ function initMagneticCursor() {
     const baseRadius = 80;
     
     // Увеличиваем радиус для маленьких элементов
-    if (elementSize < 50) return baseRadius * 1.5;
-    if (elementSize < 100) return baseRadius * 1.2;
+    if (elementSize < 50) return baseRadius * 1.7;
+    if (elementSize < 100) return baseRadius * 1.3;
     
     // Уменьшаем радиус для больших элементов
-    if (elementSize > 200) return baseRadius * 0.8;
+    if (elementSize > 200) return baseRadius * 0.7;
     
     return baseRadius;
   }
@@ -526,15 +526,41 @@ function initMagneticCursor() {
   function getElementPriority(element) {
     let priority = 1;
     
-    // Кнопки и ссылки имеют высокий приоритет
-    if (element.tagName === 'BUTTON' || element.tagName === 'A') {
-      priority = 2;
+    // Кнопки, ссылки, крестики, поля ввода — высокий приоритет
+    if (
+      element.tagName === 'BUTTON' ||
+      element.tagName === 'A' ||
+      element.classList.contains('modal__close') ||
+      element.classList.contains('auth-submit-btn') ||
+      element.classList.contains('action-btn') ||
+      element.classList.contains('color-btn') ||
+      element.classList.contains('big-modal-btn') ||
+      element.classList.contains('experimental-btn') ||
+      element.classList.contains('private-chat-back') ||
+      element.classList.contains('auth-tab') ||
+      element.classList.contains('modal-trigger-btn') ||
+      element.classList.contains('avatar-actions') ||
+      element.classList.contains('form-group')
+    ) {
+      priority = 2.5;
     }
-    
+    // Поля ввода
+    if (
+      element.tagName === 'INPUT' ||
+      element.tagName === 'TEXTAREA' ||
+      element.tagName === 'SELECT' ||
+      element.classList.contains('form-group')
+    ) {
+      priority = 2.7;
+    }
+    // Крестики модалок
+    if (element.classList.contains('modal__close')) {
+      priority = 3.0;
+    }
     // Интерактивные карточки
     if (element.classList.contains('service__card') || 
         element.classList.contains('experimental-card')) {
-      priority = 1.5;
+      priority = 1.7;
     }
     
     // Элементы навигации
@@ -542,9 +568,19 @@ function initMagneticCursor() {
       priority = 1.8;
     }
     
-    // Модальные окна
-    if (element.closest('.modal__content')) {
-      priority = 1.3;
+    // Модальные окна и их контент
+    if (element.classList.contains('modal__content') || element.classList.contains('modal__header') || element.classList.contains('modal__body')) {
+      priority = 1.5;
+    }
+    
+    // Иконки модалок
+    if (element.classList.contains('modal__icon')) {
+      priority = 1.4;
+    }
+    
+    // Блоки новостей с кастомным JS
+    if (element.classList.contains('news-custom-js')) {
+      priority = 1.6;
     }
     
     // Статистические блоки
@@ -552,10 +588,21 @@ function initMagneticCursor() {
       priority = 1.2;
     }
     
+    // Бонус за aria-label, title, tabindex, role=button
+    if (element.hasAttribute('aria-label') || element.hasAttribute('title')) {
+      priority += 0.5;
+    }
+    if (element.hasAttribute('tabindex')) {
+      priority += 0.3;
+    }
+    if (element.getAttribute('role') === 'button') {
+      priority += 0.7;
+    }
+    
     // Учитываем видимость элемента
     const rect = element.getBoundingClientRect();
-    if (rect.top < 0 || rect.bottom > window.innerHeight) {
-      priority *= 0.7; // Снижаем приоритет для элементов вне экрана
+    if (rect.top < 0 || rect.bottom > window.innerHeight || rect.left < 0 || rect.right > window.innerWidth) {
+      priority *= 0.5; // Снижаем приоритет для элементов вне экрана
     }
     
     // Бонус для элементов в центре экрана
@@ -603,12 +650,22 @@ function initMagneticCursor() {
     const currentTime = Date.now();
     calculateMouseSpeed(mouseX, mouseY, currentTime);
     
-    // Динамически выбираем элементы в зависимости от скорости мыши
-    let selector = 'button, a, .service__card, .stat, .experimental-card, .modal__content, .nav__menu li';
+    // Новый расширенный селектор для всех интерактивных элементов
+    let selector = [
+      'button', 'a', 'input', 'textarea', 'select',
+      '.service__card', '.stat', '.experimental-card', '.experimental-btn',
+      '.modal__close', '.modal__content', '.modal__header', '.modal__body', '.modal__icon',
+      '.modal-trigger-btn', '.auth-tab', '.action-btn', '.color-btn', '.big-modal-btn',
+      '.avatar-actions button', '.form-group input', '.auth-submit-btn', '.private-chat-back',
+      '.news-custom-js', '.nav__menu li', '[tabindex]', '[role="button"]'
+    ].join(', ');
     
-    // При высокой скорости мыши фокусируемся только на важных элементах
+    // При высокой скорости мыши — только важные элементы
     if (lastMouseSpeed > 2) {
-      selector = 'button, a, .nav__menu li';
+      selector = [
+        'button', 'a', 'input', 'textarea', 'select',
+        '.modal__close', '.experimental-btn', '.big-modal-btn', '.auth-submit-btn', '.private-chat-back', '[tabindex]', '[role="button"]'
+      ].join(', ');
     }
     
     const elements = document.querySelectorAll(selector);
@@ -616,6 +673,8 @@ function initMagneticCursor() {
     let bestScore = -Infinity;
     
     elements.forEach(element => {
+      // Не примагничиваем к невидимым/disabled элементам
+      if (element.offsetParent === null || element.disabled) return;
       const rect = element.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
       const centerY = rect.top + rect.height / 2;
@@ -639,8 +698,8 @@ function initMagneticCursor() {
         const sizeBonus = elementSize > 50 && elementSize < 200 ? 1.1 : 1.0;
         
         // Бонус за видимость (элементы в поле зрения)
-        const isVisible = rect.top >= 0 && rect.bottom <= window.innerHeight;
-        const visibilityBonus = isVisible ? 1.1 : 0.9;
+        const isVisible = rect.top >= 0 && rect.bottom <= window.innerHeight && rect.left >= 0 && rect.right <= window.innerWidth;
+        const visibilityBonus = isVisible ? 1.1 : 0.7;
         
         const totalScore = distanceScore * priorityScore * speedBonus * directionBonus * sizeBonus * visibilityBonus;
         
@@ -653,52 +712,49 @@ function initMagneticCursor() {
     
     // Применяем примагничивание с плавными переходами
     if (bestElement && bestElement !== currentMagneticElement) {
-      // Проверяем, стоит ли переключаться на новый элемент
-      const shouldSwitch = !currentMagneticElement || 
-                          bestScore > 1.5 || // Высокий приоритет
-                          lastMouseSpeed < 0.5; // Медленное движение
-      
+      const shouldSwitch = !currentMagneticElement || bestScore > 1.5 || lastMouseSpeed < 0.5;
       if (shouldSwitch) {
-        // Убираем эффекты с предыдущего элемента
         if (currentMagneticElement) {
           currentMagneticElement.style.transform = '';
-          currentMagneticElement.style.zIndex = '';
+          if (!currentMagneticElement.classList.contains('modal__close')) {
+            currentMagneticElement.style.zIndex = '';
+          }
           currentMagneticElement.classList.remove('magnetic-active');
         }
-        
         const rect = bestElement.getBoundingClientRect();
         const centerX = rect.left + rect.width / 2;
         const centerY = rect.top + rect.height / 2;
-        
-        // Плавно перемещаем курсор к элементу
         cursorX = centerX;
         cursorY = centerY;
-        
         document.body.classList.add('magnetic');
         currentMagneticElement = bestElement;
         isMagnetic = true;
         magneticStrength = 1;
-        
-        // Добавляем эффект к элементу
-        bestElement.style.transform = 'scale(1.05)';
-        bestElement.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-        bestElement.style.zIndex = '1000';
+        bestElement.style.transform = 'scale(1.07)';
+        bestElement.style.transition = 'transform 0.28s cubic-bezier(0.4, 0, 0.2, 1)';
+        // Для крестика модалки — особый z-index
+        if (bestElement.classList.contains('modal__close')) {
+          bestElement.style.zIndex = '20001';
+        } else {
+          bestElement.style.zIndex = '1000';
+        }
         bestElement.classList.add('magnetic-active');
       }
-      
-    } else if (!bestElement && isMagnetic) {
-      // Возвращаем курсор к позиции мыши с плавным переходом
+    }
+    // При снятии магнитного эффекта
+    else if (!bestElement && isMagnetic) {
       cursorX = mouseX;
       cursorY = mouseY;
-      
       document.body.classList.remove('magnetic');
       isMagnetic = false;
       magneticStrength = 0;
-      
-      // Убираем эффекты с текущего элемента
       if (currentMagneticElement) {
         currentMagneticElement.style.transform = '';
-        currentMagneticElement.style.zIndex = '';
+        if (!currentMagneticElement.classList.contains('modal__close')) {
+          currentMagneticElement.style.zIndex = '';
+        } else {
+          currentMagneticElement.style.zIndex = '20001';
+        }
         currentMagneticElement.classList.remove('magnetic-active');
         currentMagneticElement = null;
       }
@@ -5229,5 +5285,96 @@ window.addEventListener('resize', function() {
   });
 
   console.log('Мобильная обработка клавиатуры инициализирована');
+})();
+
+// === Универсальный обработчик закрытия модальных окон ===
+document.addEventListener('DOMContentLoaded', function() {
+  // Клик по крестику
+  document.body.addEventListener('click', function(e) {
+    if (e.target.classList.contains('modal__close')) {
+      const modal = e.target.closest('.modal');
+      if (modal) {
+        if (modal.classList.contains('show')) {
+          modal.classList.remove('show');
+        } else {
+          modal.style.display = 'none';
+        }
+        document.body.style.overflow = '';
+      }
+    }
+  });
+  // Клик по фону модалки
+  document.querySelectorAll('.modal').forEach(modal => {
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal) {
+        if (modal.classList.contains('show')) {
+          modal.classList.remove('show');
+        } else {
+          modal.style.display = 'none';
+        }
+        document.body.style.overflow = '';
+      }
+    });
+  });
+  // Escape
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.modal').forEach(modal => {
+        if (modal.style.display === 'flex' || modal.classList.contains('show')) {
+          if (modal.classList.contains('show')) {
+            modal.classList.remove('show');
+          } else {
+            modal.style.display = 'none';
+          }
+          document.body.style.overflow = '';
+        }
+      });
+    }
+  });
+});
+
+// === Debug: лог клика по крестику ===
+document.body.addEventListener('click', function(e) {
+  if (e.target.classList && e.target.classList.contains('modal__close')) {
+    console.log('DEBUG: Клик по крестику модалки', e.target);
+  }
+});
+
+// === Клик по позиции кастомного курсора в магнитном режиме ===
+(function enableMagneticCursorClick() {
+  let lastSynthetic = 0;
+  function dispatchSyntheticClick(x, y) {
+    const el = document.elementFromPoint(x, y);
+    if (!el) return;
+    // Генерируем mousedown, mouseup, click
+    ['mousedown', 'mouseup', 'click'].forEach(type => {
+      const evt = new MouseEvent(type, {
+        bubbles: true,
+        cancelable: true,
+        clientX: x,
+        clientY: y,
+        view: window
+      });
+      el.dispatchEvent(evt);
+    });
+  }
+  document.addEventListener('click', function(e) {
+    if (!document.body.classList.contains('precise-cursor')) return;
+    // Не повторять синтетический клик
+    if (Date.now() - lastSynthetic < 100) return;
+    const cursor = document.querySelector('.custom-cursor');
+    if (!cursor) return;
+    // Получаем позицию шарика
+    const rect = cursor.getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+    // Если расстояние между реальным курсором и шариком больше 5px — делаем синтетический клик
+    if (Math.abs(e.clientX - x) > 5 || Math.abs(e.clientY - y) > 5) {
+      e.preventDefault();
+      e.stopPropagation();
+      lastSynthetic = Date.now();
+      dispatchSyntheticClick(x, y);
+    }
+  }, true);
 })();
 
