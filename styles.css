@@ -5,6 +5,474 @@
     box-sizing: border-box;
 }
 
+/* Стили для настройки базы данных */
+.database-setup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    backdrop-filter: blur(10px);
+}
+
+.database-setup-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 15px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.database-setup h2 {
+    color: #333;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.database-setup p {
+    color: #666;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    line-height: 1.5;
+}
+
+.setup-options {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.setup-btn {
+    flex: 1;
+    min-width: 200px;
+    padding: 1rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.setup-btn.primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.setup-btn.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+}
+
+.setup-btn.secondary {
+    background: #f8f9fa;
+    color: #333;
+    border: 2px solid #e9ecef;
+}
+
+.setup-btn.secondary:hover {
+    background: #e9ecef;
+    transform: translateY(-2px);
+}
+
+.firebase-form {
+    border-top: 1px solid #e9ecef;
+    padding-top: 1.5rem;
+}
+
+.firebase-form h3 {
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+.firebase-form p {
+    text-align: left;
+    margin-bottom: 1.5rem;
+}
+
+.firebase-form a {
+    color: #667eea;
+    text-decoration: none;
+}
+
+.firebase-form a:hover {
+    text-decoration: underline;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #333;
+    font-weight: 600;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #e9ecef;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.save-btn, .cancel-btn {
+    flex: 1;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.save-btn {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+}
+
+.save-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(40, 167, 69, 0.3);
+}
+
+.cancel-btn {
+    background: #6c757d;
+    color: white;
+}
+
+.cancel-btn:hover {
+    background: #5a6268;
+    transform: translateY(-2px);
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 768px) {
+    .database-setup-content {
+        padding: 1.5rem;
+        margin: 1rem;
+    }
+    
+    .setup-options {
+        flex-direction: column;
+    }
+    
+    .setup-btn {
+        min-width: auto;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+}
+
+/* Стили для блока экспериментальных функций */
+.experimental-features {
+    padding: 4rem 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.experimental-features .section__title {
+    color: white;
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.experimental-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.experimental-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2rem;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.experimental-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.5s ease;
+}
+
+.experimental-card:hover::before {
+    left: 100%;
+}
+
+.experimental-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.experimental-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.experimental-card h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: white;
+}
+
+.experimental-card p {
+    color: rgba(255, 255, 255, 0.8);
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+}
+
+.experimental-btn {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.experimental-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.experimental-btn.primary {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    border-color: transparent;
+}
+
+.experimental-btn.primary:hover {
+    background: linear-gradient(135deg, #218838 0%, #1ea085 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(40, 167, 69, 0.3);
+}
+
+/* Стили для отключенной кнопки на мобильных устройствах */
+.experimental-btn:disabled {
+    background: rgba(128, 128, 128, 0.3);
+    color: rgba(255, 255, 255, 0.6);
+    border-color: rgba(128, 128, 128, 0.4);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.experimental-btn:disabled:hover {
+    background: rgba(128, 128, 128, 0.3);
+    border-color: rgba(128, 128, 128, 0.4);
+    transform: none;
+    box-shadow: none;
+}
+
+/* Адаптивность для экспериментальных функций */
+@media (max-width: 768px) {
+    .experimental-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        padding: 0 1rem;
+    }
+    
+    .experimental-card {
+        padding: 1.5rem;
+    }
+    
+    .experimental-icon {
+        font-size: 2.5rem;
+    }
+    
+    .experimental-card h3 {
+        font-size: 1.3rem;
+    }
+}
+
+/* Стили для быстрых анимаций */
+.fast-animations * {
+    transition-duration: 0.1s !important;
+    animation-duration: 0.1s !important;
+}
+
+.fast-animations .experimental-card:hover {
+    transform: translateY(-5px);
+}
+
+/* Стили для точных курсоров */
+.precise-cursor {
+    cursor: none;
+}
+
+.precise-cursor button,
+.precise-cursor a,
+.precise-cursor [style*="cursor: pointer"] {
+    cursor: none !important;
+}
+
+/* Кастомный курсор-шар */
+.custom-cursor {
+    position: fixed;
+    width: 20px;
+    height: 20px;
+    background: radial-gradient(circle, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 10000;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+    transform: translate(-50%, -50%);
+    display: none;
+    mix-blend-mode: difference;
+}
+
+.precise-cursor .custom-cursor {
+    display: block;
+}
+
+/* Эффект примагничивания */
+.precise-cursor.magnetic .custom-cursor {
+    width: 30px;
+    height: 30px;
+    background: radial-gradient(circle, #ff6b6b 0%, #ee5a24 100%);
+    box-shadow: 0 0 20px rgba(255, 107, 107, 0.7), 0 0 40px rgba(255, 107, 107, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: magneticPulse 2s ease-in-out infinite;
+}
+
+/* Анимация пульсации для магнитного курсора */
+@keyframes magneticPulse {
+    0%, 100% {
+        transform: translate(-50%, -50%) scale(1);
+        box-shadow: 0 0 20px rgba(255, 107, 107, 0.7), 0 0 40px rgba(255, 107, 107, 0.3);
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.1);
+        box-shadow: 0 0 30px rgba(255, 107, 107, 0.8), 0 0 60px rgba(255, 107, 107, 0.4);
+    }
+}
+
+/* Стили для активных магнитных элементов */
+.magnetic-active {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.magnetic-active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at center, rgba(255, 107, 107, 0.1) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: -1;
+    animation: magneticGlow 2s ease-in-out infinite;
+}
+
+@keyframes magneticGlow {
+    0%, 100% {
+        opacity: 0.3;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.6;
+        transform: scale(1.05);
+    }
+}
+
+/* Улучшенные стили для элементов при наведении с магнитным курсором */
+.precise-cursor button:hover,
+.precise-cursor a:hover,
+.precise-cursor .service__card:hover,
+.precise-cursor .stat:hover,
+.precise-cursor .experimental-card:hover {
+    transform: scale(1.02);
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Специальные стили для кнопок в магнитном режиме */
+.precise-cursor.magnetic button,
+.precise-cursor.magnetic a {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Эффект свечения для магнитных элементов */
+.magnetic-active::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, rgba(255, 107, 107, 0.2), rgba(238, 90, 36, 0.2));
+    border-radius: inherit;
+    z-index: -2;
+    opacity: 0;
+    animation: magneticBorder 2s ease-in-out infinite;
+}
+
+@keyframes magneticBorder {
+    0%, 100% {
+        opacity: 0;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.02);
+    }
+}
+
+/* Скрываем стандартный курсор */
+.precise-cursor * {
+    cursor: none !important;
+}
+
 html {
     scroll-behavior: smooth;
 }
@@ -4105,5 +4573,74 @@ body.dark-theme .modal-close:hover {
     border-radius: 18px;
     box-shadow: 0 8px 40px rgba(0,0,0,0.25);
   }
+}
+
+/* Индикатор скорости */
+#speed-indicator {
+  position: fixed;
+  top: 24px;
+  right: 32px;
+  z-index: 9999;
+  background: linear-gradient(90deg, #ffecb3 0%, #ffe082 100%);
+  color: #ff9800;
+  font-weight: bold;
+  font-size: 1.2rem;
+  padding: 0.7em 1.5em 0.7em 1.2em;
+  border-radius: 2em;
+  box-shadow: 0 4px 16px rgba(255, 193, 7, 0.15);
+  opacity: 0;
+  transform: translateY(-20px) scale(0.95);
+  pointer-events: none;
+  transition: all 0.4s cubic-bezier(.4,0,.2,1);
+  display: flex;
+  align-items: center;
+  gap: 0.7em;
+}
+#speed-indicator .speed-icon {
+  font-size: 1.5em;
+  animation: speedPulse 1s infinite alternate;
+}
+#speed-indicator.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+@keyframes speedPulse {
+  0% { filter: brightness(1.2) drop-shadow(0 0 4px #fff176); }
+  100% { filter: brightness(1.6) drop-shadow(0 0 12px #ffd600); }
+}
+
+/* Вспышка */
+.fast-flash {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fffde7 0%, #ffe082 60%, transparent 100%);
+  opacity: 0.7;
+  transform: translate(-50%, -50%) scale(0.2);
+  transition: all 0.25s cubic-bezier(.4,0,.2,1);
+  z-index: 100;
+}
+.fast-flash.active {
+  width: 180px;
+  height: 180px;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(1.2);
+}
+
+/* Дрожание */
+.fast-shake {
+  animation: fastShake 0.18s cubic-bezier(.4,0,.2,1) 2;
+}
+@keyframes fastShake {
+  0% { transform: translateX(0); }
+  20% { transform: translateX(-3px) rotate(-1deg); }
+  40% { transform: translateX(4px) rotate(1deg); }
+  60% { transform: translateX(-2px) rotate(-1deg); }
+  80% { transform: translateX(2px) rotate(1deg); }
+  100% { transform: translateX(0); }
 }
 

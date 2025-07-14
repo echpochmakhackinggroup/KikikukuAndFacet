@@ -1,26 +1,783 @@
 // Инициализация GSAP плагинов
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
-// === Avatar System ===
-// Цвета для аватарок
-const avatarColors = {
-  R: '#ff4444', // Red
-  G: '#44ff44', // Green
-  B: '#4444ff', // Blue
-  Y: '#ffff44', // Yellow
-  P: '#ff44ff', // Purple
-  C: '#44ffff', // Cyan
-  O: '#ff8844', // Orange
-  W: '#ffffff', // White
-  K: '#000000'  // Black
-};
+// === Система настройки базы данных ===
+(function setupDatabaseConfiguration() {
+  // Проверяем, настроена ли база данных
+  if (!isDatabaseConfigured()) {
+    // Показываем форму настройки
+    const databaseSetup = document.getElementById('database-setup');
+    if (databaseSetup) {
+      databaseSetup.style.display = 'flex';
+    }
+    
+    // Обработчики для кнопок
+    const setupDatabaseBtn = document.getElementById('setup-database-btn');
+    const continueWithoutDbBtn = document.getElementById('continue-without-db-btn');
+    const firebaseForm = document.getElementById('firebase-form');
+    const saveConfigBtn = document.getElementById('save-config-btn');
+    const cancelConfigBtn = document.getElementById('cancel-config-btn');
+    
+    // Показать форму настройки Firebase
+    if (setupDatabaseBtn) {
+      setupDatabaseBtn.addEventListener('click', () => {
+        if (firebaseForm) {
+          firebaseForm.style.display = 'block';
+        }
+      });
+    }
+    
+    // Продолжить без базы данных
+    if (continueWithoutDbBtn) {
+      continueWithoutDbBtn.addEventListener('click', () => {
+        localStorage.setItem('databaseSetupComplete', 'true');
+        localStorage.setItem('databaseDisabled', 'true');
+        if (databaseSetup) {
+          databaseSetup.style.display = 'none';
+        }
+        // Отключаем функции, требующие базу данных
+        disableDatabaseFeatures();
+      });
+    }
+    
+    // Сохранить конфигурацию
+    if (saveConfigBtn) {
+      saveConfigBtn.addEventListener('click', async () => {
+        const config = {
+          apiKey: document.getElementById('apiKey').value.trim(),
+          authDomain: document.getElementById('authDomain').value.trim(),
+          databaseURL: document.getElementById('databaseURL').value.trim(),
+          projectId: document.getElementById('projectId').value.trim(),
+          storageBucket: document.getElementById('storageBucket').value.trim(),
+          messagingSenderId: document.getElementById('messagingSenderId').value.trim(),
+          appId: document.getElementById('appId').value.trim(),
+          measurementId: document.getElementById('measurementId').value.trim()
+        };
+        
+        // Проверяем обязательные поля
+        if (!config.apiKey || !config.projectId || !config.authDomain) {
+          alert('Пожалуйста, заполните обязательные поля: API Key, Project ID и Auth Domain');
+          return;
+        }
+        
+        try {
+          // Сохраняем конфигурацию
+          saveFirebaseConfig(config);
+          localStorage.setItem('databaseSetupComplete', 'true');
+          
+          // Скрываем форму настройки
+          if (databaseSetup) {
+            databaseSetup.style.display = 'none';
+          }
+          
+          // Перезагружаем страницу для применения новой конфигурации
+          window.location.reload();
+        } catch (error) {
+          console.error('Ошибка сохранения конфигурации:', error);
+          alert('Ошибка сохранения конфигурации. Попробуйте еще раз.');
+        }
+      });
+    }
+    
+    // Отмена настройки
+    if (cancelConfigBtn) {
+      cancelConfigBtn.addEventListener('click', () => {
+        if (firebaseForm) {
+          firebaseForm.style.display = 'none';
+        }
+      });
+    }
+  } else {
+    // База данных уже настроена, проверяем не отключена ли она
+    const databaseDisabled = localStorage.getItem('databaseDisabled');
+    if (databaseDisabled === 'true') {
+      disableDatabaseFeatures();
+    }
+  }
+  
+  // Инициализируем состояние кнопок экспериментальных функций
+  initializeExperimentalButtons();
+})();
 
-// Фигуры для аватарок
-const avatarShapes = {
-  S: 'square',    // Square
-  C: 'circle',    // Circle
-  D: 'diamond'    // Diamond
-};
+// Функция для определения мобильного устройства
+function isMobileDevice() {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+         window.innerWidth <= 768;
+}
+
+// Функция для инициализации состояния кнопок экспериментальных функций
+function initializeExperimentalButtons() {
+  const buttons = document.querySelectorAll('.experimental-btn');
+  buttons.forEach(button => {
+    const text = button.textContent.toLowerCase();
+    
+    if (text.includes('автоматическая тема')) {
+      const isEnabled = localStorage.getItem('autoThemeEnabled') === 'true';
+      if (isEnabled) {
+        button.textContent = 'Отключить';
+        button.style.background = 'rgba(255, 255, 255, 0.4)';
+        startAutoTheme();
+      }
+    } else if (text.includes('эффект отражения')) {
+      const isEnabled = localStorage.getItem('reflectionEnabled') === 'true';
+      if (isEnabled) {
+        button.textContent = 'Отключить';
+        button.style.background = 'rgba(255, 255, 255, 0.4)';
+      }
+    } else if (text.includes('гироскоп')) {
+      const isEnabled = localStorage.getItem('gyroEnabled') === 'true';
+      if (isEnabled) {
+        button.textContent = 'Отключить';
+        button.style.background = 'rgba(255, 255, 255, 0.4)';
+        const gyroInfo = document.getElementById('gyro-info');
+        if (gyroInfo) {
+          gyroInfo.style.display = 'block';
+        }
+      }
+    } else if (text.includes('быстрые анимации')) {
+      const isEnabled = localStorage.getItem('fastAnimationsEnabled') === 'true';
+      if (isEnabled) {
+        button.textContent = 'Отключить';
+        button.style.background = 'rgba(255, 255, 255, 0.4)';
+        document.body.classList.add('fast-animations');
+        if (window.gsap) {
+          gsap.globalTimeline.timeScale(3);
+        }
+      }
+    } else if (text.includes('точные курсоры')) {
+      // Отключаем функцию на мобильных устройствах
+      if (isMobileDevice()) {
+        button.textContent = 'Недоступно на мобильных';
+        button.style.background = 'rgba(128, 128, 128, 0.3)';
+        button.style.cursor = 'not-allowed';
+        button.disabled = true;
+        return;
+      }
+      
+      const isEnabled = localStorage.getItem('preciseCursorEnabled') === 'true';
+      if (isEnabled) {
+        button.textContent = 'Отключить';
+        button.style.background = 'rgba(255, 255, 255, 0.4)';
+        document.body.classList.add('precise-cursor');
+        initMagneticCursor();
+      }
+    }
+  });
+}
+
+// Функция для отключения функций, требующих базу данных
+function disableDatabaseFeatures() {
+  // Скрываем элементы, требующие базу данных
+  const elementsToHide = [
+    '#auth-section',
+    '#comment-form',
+    '.nav-chat-link',
+    '#chat-sidebar',
+    '#database-features',
+    '#news'
+  ];
+  
+  elementsToHide.forEach(selector => {
+    const element = document.querySelector(selector);
+    if (element) {
+      element.style.display = 'none';
+    }
+  });
+  
+  // Показываем блок экспериментальных функций
+  const experimentalFeatures = document.getElementById('experimental-features');
+  if (experimentalFeatures) {
+    experimentalFeatures.style.display = 'block';
+  }
+  
+  // Добавляем уведомление о том, что база данных отключена
+  const notification = document.createElement('div');
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #ffc107;
+    color: #333;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1000;
+    max-width: 300px;
+    font-size: 0.9rem;
+  `;
+  notification.innerHTML = `
+    <strong>База данных отключена</strong><br>
+    Включены экспериментальные функции.<br>
+    <a href="#" onclick="resetDatabaseConfig()" style="color: #007bff; text-decoration: none;">Настроить заново</a>
+  `;
+  document.body.appendChild(notification);
+  
+  // Удаляем уведомление через 10 секунд
+  setTimeout(() => {
+    if (notification.parentNode) {
+      notification.parentNode.removeChild(notification);
+    }
+  }, 10000);
+}
+
+// Функция для сброса конфигурации базы данных
+function resetDatabaseConfig() {
+  localStorage.removeItem('firebaseConfig');
+  localStorage.removeItem('databaseSetupComplete');
+  localStorage.removeItem('databaseDisabled');
+  window.location.reload();
+}
+
+// Делаем функцию доступной глобально
+window.resetDatabaseConfig = resetDatabaseConfig;
+
+// === Функции для экспериментальных кнопок ===
+function toggleAutoTheme() {
+  const isEnabled = localStorage.getItem('autoThemeEnabled') === 'true';
+  localStorage.setItem('autoThemeEnabled', !isEnabled);
+  
+  const button = event.target;
+  if (!isEnabled) {
+    button.textContent = 'Отключить';
+    button.style.background = 'rgba(255, 255, 255, 0.4)';
+    showNotification('Автоматическая тема включена', 'success');
+    startAutoTheme();
+  } else {
+    button.textContent = 'Включить';
+    button.style.background = 'rgba(255, 255, 255, 0.2)';
+    showNotification('Автоматическая тема отключена', 'info');
+    stopAutoTheme();
+  }
+}
+
+// Функция автоматического переключения темы
+function startAutoTheme() {
+  function checkTimeAndTheme() {
+    const now = new Date();
+    const hour = now.getHours();
+    
+    // Тёмная тема с 18:00 до 7:00
+    if (hour >= 18 || hour < 7) {
+      if (!document.body.classList.contains('dark-theme')) {
+        document.body.classList.add('dark-theme');
+        showNotification('🌙 Переключено на тёмную тему', 'info', 2000);
+      }
+    } else {
+      if (document.body.classList.contains('dark-theme')) {
+        document.body.classList.remove('dark-theme');
+        showNotification('☀️ Переключено на светлую тему', 'info', 2000);
+      }
+    }
+  }
+  
+  // Проверяем сразу
+  checkTimeAndTheme();
+  
+  // Проверяем каждую минуту
+  window.autoThemeInterval = setInterval(checkTimeAndTheme, 60000);
+}
+
+// Функция остановки автоматической темы
+function stopAutoTheme() {
+  if (window.autoThemeInterval) {
+    clearInterval(window.autoThemeInterval);
+    delete window.autoThemeInterval;
+  }
+}
+
+function toggleReflectionEffect() {
+  const isEnabled = localStorage.getItem('reflectionEnabled') === 'true';
+  localStorage.setItem('reflectionEnabled', !isEnabled);
+  
+  const button = event.target;
+  if (!isEnabled) {
+    button.textContent = 'Отключить';
+    button.style.background = 'rgba(255, 255, 255, 0.4)';
+    showNotification('Эффект отражения включен', 'success');
+    // Включаем эффект отражения
+    if (window.enableReflectionEffect) {
+      window.enableReflectionEffect();
+    }
+  } else {
+    button.textContent = 'Включить';
+    button.style.background = 'rgba(255, 255, 255, 0.2)';
+    showNotification('Эффект отражения отключен', 'info');
+    // Отключаем эффект отражения
+    if (window.disableReflectionEffect) {
+      window.disableReflectionEffect();
+    }
+  }
+}
+
+function toggleGyro() {
+  const isEnabled = localStorage.getItem('gyroEnabled') === 'true';
+  localStorage.setItem('gyroEnabled', !isEnabled);
+  
+  const button = event.target;
+  if (!isEnabled) {
+    button.textContent = 'Отключить';
+    button.style.background = 'rgba(255, 255, 255, 0.4)';
+    showNotification('Гироскоп включен', 'success');
+    // Показываем информацию о гироскопе
+    const gyroInfo = document.getElementById('gyro-info');
+    if (gyroInfo) {
+      gyroInfo.style.display = 'block';
+    }
+  } else {
+    button.textContent = 'Включить';
+    button.style.background = 'rgba(255, 255, 255, 0.2)';
+    showNotification('Гироскоп отключен', 'info');
+    // Скрываем информацию о гироскопе
+    const gyroInfo = document.getElementById('gyro-info');
+    if (gyroInfo) {
+      gyroInfo.style.display = 'none';
+    }
+  }
+}
+
+function toggleFastAnimations() {
+  const isEnabled = localStorage.getItem('fastAnimationsEnabled') === 'true';
+  localStorage.setItem('fastAnimationsEnabled', !isEnabled);
+  
+  const button = event.target;
+  if (!isEnabled) {
+    button.textContent = 'Отключить';
+    button.style.background = 'rgba(255, 255, 255, 0.4)';
+    showNotification('Быстрые анимации включены', 'success');
+    document.body.classList.add('fast-animations');
+    // Ускоряем GSAP анимации
+    if (window.gsap) {
+      gsap.globalTimeline.timeScale(3);
+    }
+    // Показываем индикатор скорости
+    showSpeedIndicator();
+    // Включаем эффекты вспышек и дрожания
+    enableFastAnimationEffects();
+  } else {
+    button.textContent = 'Включить';
+    button.style.background = 'rgba(255, 255, 255, 0.2)';
+    showNotification('Быстрые анимации отключены', 'info');
+    document.body.classList.remove('fast-animations');
+    // Возвращаем нормальную скорость GSAP
+    if (window.gsap) {
+      gsap.globalTimeline.timeScale(1);
+    }
+    // Скрываем индикатор скорости
+    hideSpeedIndicator();
+    // Отключаем эффекты вспышек и дрожания
+    disableFastAnimationEffects();
+  }
+}
+
+// Индикатор скорости
+function showSpeedIndicator() {
+  if (document.getElementById('speed-indicator')) return;
+  const indicator = document.createElement('div');
+  indicator.id = 'speed-indicator';
+  indicator.innerHTML = '<span class="speed-icon">⚡</span> Быстро!';
+  document.body.appendChild(indicator);
+  setTimeout(() => { indicator.classList.add('visible'); }, 10);
+}
+function hideSpeedIndicator() {
+  const indicator = document.getElementById('speed-indicator');
+  if (indicator) {
+    indicator.classList.remove('visible');
+    setTimeout(() => indicator.remove(), 400);
+  }
+}
+
+// Вспышки и дрожание
+let fastAnimationListeners = [];
+function enableFastAnimationEffects() {
+  // Вспышки при клике
+  const selectors = 'button, a, .service__card, .stat, .experimental-card, .modal__content, .nav__menu li';
+  document.querySelectorAll(selectors).forEach(el => {
+    const clickHandler = e => {
+      createFlashEffect(e.currentTarget);
+    };
+    el.addEventListener('click', clickHandler);
+    fastAnimationListeners.push({el, clickHandler});
+  });
+  // Дрожание при наведении
+  document.querySelectorAll(selectors).forEach(el => {
+    const mouseEnter = () => el.classList.add('fast-shake');
+    const mouseLeave = () => el.classList.remove('fast-shake');
+    el.addEventListener('mouseenter', mouseEnter);
+    el.addEventListener('mouseleave', mouseLeave);
+    fastAnimationListeners.push({el, mouseEnter, mouseLeave});
+  });
+}
+function disableFastAnimationEffects() {
+  fastAnimationListeners.forEach(({el, clickHandler, mouseEnter, mouseLeave}) => {
+    if (clickHandler) el.removeEventListener('click', clickHandler);
+    if (mouseEnter) el.removeEventListener('mouseenter', mouseEnter);
+    if (mouseLeave) el.removeEventListener('mouseleave', mouseLeave);
+    el.classList.remove('fast-shake');
+  });
+  fastAnimationListeners = [];
+}
+// Вспышка
+function createFlashEffect(target) {
+  const flash = document.createElement('span');
+  flash.className = 'fast-flash';
+  target.appendChild(flash);
+  setTimeout(() => flash.classList.add('active'), 10);
+  setTimeout(() => flash.remove(), 350);
+}
+
+function togglePreciseCursor() {
+  // Проверяем, не мобильное ли это устройство
+  if (isMobileDevice()) {
+    showNotification('Функция недоступна на мобильных устройствах', 'warning');
+    return;
+  }
+  
+  const isEnabled = localStorage.getItem('preciseCursorEnabled') === 'true';
+  localStorage.setItem('preciseCursorEnabled', !isEnabled);
+  
+  const button = event.target;
+  if (!isEnabled) {
+    button.textContent = 'Отключить';
+    button.style.background = 'rgba(255, 255, 255, 0.4)';
+    showNotification('Точные курсоры включены', 'success');
+    document.body.classList.add('precise-cursor');
+    initMagneticCursor();
+  } else {
+    button.textContent = 'Включить';
+    button.style.background = 'rgba(255, 255, 255, 0.2)';
+    showNotification('Точные курсоры отключены', 'info');
+    document.body.classList.remove('precise-cursor');
+    removeMagneticCursor();
+  }
+}
+
+// Функция инициализации магнитного курсора
+function initMagneticCursor() {
+  // Проверяем, не мобильное ли это устройство
+  if (isMobileDevice()) {
+    console.log('Магнитный курсор недоступен на мобильных устройствах');
+    return;
+  }
+  
+  let mouseX = 0;
+  let mouseY = 0;
+  let cursorX = 0;
+  let cursorY = 0;
+  let isMagnetic = false;
+  let currentMagneticElement = null;
+  let magneticStrength = 0;
+  let lastMouseSpeed = 0;
+  let mouseVelocityX = 0;
+  let mouseVelocityY = 0;
+  let lastMouseX = 0;
+  let lastMouseY = 0;
+  let lastTime = Date.now();
+  
+  // Создаем кастомный курсор, если его нет
+  function createCustomCursor() {
+    if (!document.querySelector('.custom-cursor')) {
+      const cursor = document.createElement('div');
+      cursor.className = 'custom-cursor';
+      document.body.appendChild(cursor);
+    }
+  }
+  
+  // Обновляем позицию курсора с плавной анимацией
+  function updateCursor() {
+    const cursor = document.querySelector('.custom-cursor');
+    if (cursor) {
+      cursor.style.left = cursorX + 'px';
+      cursor.style.top = cursorY + 'px';
+    }
+  }
+  
+  // Вычисляем скорость мыши
+  function calculateMouseSpeed(currentX, currentY, currentTime) {
+    const deltaTime = currentTime - lastTime;
+    if (deltaTime > 0) {
+      const deltaX = currentX - lastMouseX;
+      const deltaY = currentY - lastMouseY;
+      mouseVelocityX = deltaX / deltaTime;
+      mouseVelocityY = deltaY / deltaTime;
+      lastMouseSpeed = Math.sqrt(mouseVelocityX * mouseVelocityX + mouseVelocityY * mouseVelocityY);
+    }
+    lastMouseX = currentX;
+    lastMouseY = currentY;
+    lastTime = currentTime;
+  }
+  
+  // Адаптивный радиус примагничивания
+  function getAdaptiveRadius(element) {
+    const rect = element.getBoundingClientRect();
+    const elementSize = Math.max(rect.width, rect.height);
+    const baseRadius = 80;
+    
+    // Увеличиваем радиус для маленьких элементов
+    if (elementSize < 50) return baseRadius * 1.5;
+    if (elementSize < 100) return baseRadius * 1.2;
+    
+    // Уменьшаем радиус для больших элементов
+    if (elementSize > 200) return baseRadius * 0.8;
+    
+    return baseRadius;
+  }
+  
+  // Умная оценка приоритета элемента
+  function getElementPriority(element) {
+    let priority = 1;
+    
+    // Кнопки и ссылки имеют высокий приоритет
+    if (element.tagName === 'BUTTON' || element.tagName === 'A') {
+      priority = 2;
+    }
+    
+    // Интерактивные карточки
+    if (element.classList.contains('service__card') || 
+        element.classList.contains('experimental-card')) {
+      priority = 1.5;
+    }
+    
+    // Элементы навигации
+    if (element.closest('.nav__menu')) {
+      priority = 1.8;
+    }
+    
+    // Модальные окна
+    if (element.closest('.modal__content')) {
+      priority = 1.3;
+    }
+    
+    // Статистические блоки
+    if (element.classList.contains('stat')) {
+      priority = 1.2;
+    }
+    
+    // Учитываем видимость элемента
+    const rect = element.getBoundingClientRect();
+    if (rect.top < 0 || rect.bottom > window.innerHeight) {
+      priority *= 0.7; // Снижаем приоритет для элементов вне экрана
+    }
+    
+    // Бонус для элементов в центре экрана
+    const centerY = window.innerHeight / 2;
+    const elementCenterY = rect.top + rect.height / 2;
+    const distanceFromCenter = Math.abs(elementCenterY - centerY);
+    const centerBonus = Math.max(0.8, 1 - distanceFromCenter / window.innerHeight);
+    
+    return priority * centerBonus;
+  }
+  
+  // Определяем направление движения мыши
+  function getMouseDirection() {
+    if (Math.abs(mouseVelocityX) > Math.abs(mouseVelocityY)) {
+      return mouseVelocityX > 0 ? 'right' : 'left';
+    } else {
+      return mouseVelocityY > 0 ? 'down' : 'up';
+    }
+  }
+  
+  // Проверяем, находится ли элемент в направлении движения мыши
+  function isElementInMouseDirection(element, direction) {
+    const rect = element.getBoundingClientRect();
+    const elementCenterX = rect.left + rect.width / 2;
+    const elementCenterY = rect.top + rect.height / 2;
+    
+    switch (direction) {
+      case 'right':
+        return elementCenterX > mouseX;
+      case 'left':
+        return elementCenterX < mouseX;
+      case 'down':
+        return elementCenterY > mouseY;
+      case 'up':
+        return elementCenterY < mouseY;
+      default:
+        return true;
+    }
+  }
+  
+  // Умная функция примагничивания
+  function magneticEffect() {
+    if (!document.body.classList.contains('precise-cursor')) return;
+    
+    const currentTime = Date.now();
+    calculateMouseSpeed(mouseX, mouseY, currentTime);
+    
+    // Динамически выбираем элементы в зависимости от скорости мыши
+    let selector = 'button, a, .service__card, .stat, .experimental-card, .modal__content, .nav__menu li';
+    
+    // При высокой скорости мыши фокусируемся только на важных элементах
+    if (lastMouseSpeed > 2) {
+      selector = 'button, a, .nav__menu li';
+    }
+    
+    const elements = document.querySelectorAll(selector);
+    let bestElement = null;
+    let bestScore = -Infinity;
+    
+    elements.forEach(element => {
+      const rect = element.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      
+      const distance = Math.sqrt((mouseX - centerX) ** 2 + (mouseY - centerY) ** 2);
+      const adaptiveRadius = getAdaptiveRadius(element);
+      const priority = getElementPriority(element);
+      
+      // Вычисляем оценку элемента
+      if (distance < adaptiveRadius) {
+        const distanceScore = 1 - (distance / adaptiveRadius);
+        const priorityScore = priority;
+        const speedBonus = Math.max(0, 1 - lastMouseSpeed * 0.1); // Бонус при медленном движении
+        
+        // Бонус за направление движения мыши
+        const direction = getMouseDirection();
+        const directionBonus = isElementInMouseDirection(element, direction) ? 1.2 : 0.8;
+        
+        // Бонус за размер элемента (предпочитаем элементы среднего размера)
+        const elementSize = Math.max(rect.width, rect.height);
+        const sizeBonus = elementSize > 50 && elementSize < 200 ? 1.1 : 1.0;
+        
+        // Бонус за видимость (элементы в поле зрения)
+        const isVisible = rect.top >= 0 && rect.bottom <= window.innerHeight;
+        const visibilityBonus = isVisible ? 1.1 : 0.9;
+        
+        const totalScore = distanceScore * priorityScore * speedBonus * directionBonus * sizeBonus * visibilityBonus;
+        
+        if (totalScore > bestScore) {
+          bestScore = totalScore;
+          bestElement = element;
+        }
+      }
+    });
+    
+    // Применяем примагничивание с плавными переходами
+    if (bestElement && bestElement !== currentMagneticElement) {
+      // Проверяем, стоит ли переключаться на новый элемент
+      const shouldSwitch = !currentMagneticElement || 
+                          bestScore > 1.5 || // Высокий приоритет
+                          lastMouseSpeed < 0.5; // Медленное движение
+      
+      if (shouldSwitch) {
+        // Убираем эффекты с предыдущего элемента
+        if (currentMagneticElement) {
+          currentMagneticElement.style.transform = '';
+          currentMagneticElement.style.zIndex = '';
+          currentMagneticElement.classList.remove('magnetic-active');
+        }
+        
+        const rect = bestElement.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        
+        // Плавно перемещаем курсор к элементу
+        cursorX = centerX;
+        cursorY = centerY;
+        
+        document.body.classList.add('magnetic');
+        currentMagneticElement = bestElement;
+        isMagnetic = true;
+        magneticStrength = 1;
+        
+        // Добавляем эффект к элементу
+        bestElement.style.transform = 'scale(1.05)';
+        bestElement.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+        bestElement.style.zIndex = '1000';
+        bestElement.classList.add('magnetic-active');
+      }
+      
+    } else if (!bestElement && isMagnetic) {
+      // Возвращаем курсор к позиции мыши с плавным переходом
+      cursorX = mouseX;
+      cursorY = mouseY;
+      
+      document.body.classList.remove('magnetic');
+      isMagnetic = false;
+      magneticStrength = 0;
+      
+      // Убираем эффекты с текущего элемента
+      if (currentMagneticElement) {
+        currentMagneticElement.style.transform = '';
+        currentMagneticElement.style.zIndex = '';
+        currentMagneticElement.classList.remove('magnetic-active');
+        currentMagneticElement = null;
+      }
+    } else if (bestElement && isMagnetic) {
+      // Обновляем позицию курсора для текущего магнитного элемента
+      const rect = bestElement.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      
+      cursorX = centerX;
+      cursorY = centerY;
+    }
+    
+    updateCursor();
+    requestAnimationFrame(magneticEffect);
+  }
+  
+  // Обработчик движения мыши с дебаунсингом
+  function handleMouseMove(e) {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+    
+    if (!isMagnetic) {
+      // Добавляем небольшую инерцию для более плавного движения
+      const inertia = 0.8;
+      cursorX += (mouseX - cursorX) * (1 - inertia);
+      cursorY += (mouseY - cursorY) * (1 - inertia);
+    }
+  }
+  
+  // Создаем курсор и запускаем эффект
+  createCustomCursor();
+  magneticEffect();
+  
+  // Добавляем обработчик
+  document.addEventListener('mousemove', handleMouseMove);
+  
+  // Сохраняем ссылки для удаления
+  window.magneticCursorHandlers = {
+    handleMouseMove,
+    magneticEffect
+  };
+}
+
+// Функция удаления магнитного курсора
+function removeMagneticCursor() {
+  if (window.magneticCursorHandlers) {
+    document.removeEventListener('mousemove', window.magneticCursorHandlers.handleMouseMove);
+    delete window.magneticCursorHandlers;
+  }
+  
+  // Убираем эффекты со всех элементов
+  const elements = document.querySelectorAll('button, a, .service__card, .stat, .experimental-card, .modal__content, .nav__menu li');
+  elements.forEach(element => {
+    element.style.transform = '';
+    element.style.zIndex = '';
+    element.classList.remove('magnetic-active');
+  });
+  
+  // Удаляем кастомный курсор
+  const cursor = document.querySelector('.custom-cursor');
+  if (cursor) {
+    cursor.remove();
+  }
+  
+  document.body.classList.remove('magnetic');
+}
+
+// Делаем функции доступными глобально
+window.toggleAutoTheme = toggleAutoTheme;
+window.toggleReflectionEffect = toggleReflectionEffect;
+window.toggleGyro = toggleGyro;
+window.toggleFastAnimations = toggleFastAnimations;
+window.togglePreciseCursor = togglePreciseCursor;
+
+// === Avatar System ===
+// Используем конфигурацию из config.js
+const avatarColors = APP_CONFIG.avatar.colors;
+const avatarShapes = APP_CONFIG.avatar.shapes;
 
 // Генерация случайного кода аватарки
 function generateRandomAvatarCode() {
@@ -36,9 +793,13 @@ function generateRandomAvatarCode() {
 
 // Получение или создание аватарки для пользователя
 async function getUserAvatar(userUid) {
+  if (!db) {
+    return generateRandomAvatarCode(); // Возвращаем случайную аватарку если база недоступна
+  }
+  
   try {
     // Проверяем, есть ли аватарка в базе
-    const avatarDoc = await db.collection('avatarka').doc(userUid).get();
+    const avatarDoc = await db.collection(APP_CONFIG.collections.avatars).doc(userUid).get();
     
     if (avatarDoc.exists) {
       return avatarDoc.data().code;
@@ -46,7 +807,7 @@ async function getUserAvatar(userUid) {
       // Создаем новую аватарку
       const newAvatarCode = generateRandomAvatarCode();
       
-      await db.collection('avatarka').doc(userUid).set({
+      await db.collection(APP_CONFIG.collections.avatars).doc(userUid).set({
         code: newAvatarCode,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
@@ -1094,20 +1855,25 @@ setInterval(setHeroBackgroundByTime, 60000);
 })();
 
 // === Firebase config ===
-const firebaseConfig = {
-  apiKey: "AIzaSyA0SHaJ4MoO50Vx1u59gPpmXer5bNjBdZk",
-  authDomain: "sait-s-vitoi.firebaseapp.com",
-  databaseURL: "https://sait-s-vitoi-default-rtdb.firebaseio.com",
-  projectId: "sait-s-vitoi",
-  storageBucket: "sait-s-vitoi.firebasestorage.app",
-  messagingSenderId: "182870319147",
-  appId: "1:182870319147:web:2b4301d6c2232c8bed4a6e",
-  measurementId: "G-3T12739LZB"
-};
+// Инициализируем Firebase только если база данных настроена
+let auth = null;
+let db = null;
 
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
+if (isDatabaseConfigured() && localStorage.getItem('databaseDisabled') !== 'true') {
+  try {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    auth = firebase.auth();
+    db = firebase.firestore();
+    console.log('Firebase успешно инициализирован');
+  } catch (error) {
+    console.error('Ошибка инициализации Firebase:', error);
+    // Если ошибка инициализации, отключаем базу данных
+    localStorage.setItem('databaseDisabled', 'true');
+    disableDatabaseFeatures();
+  }
+} else {
+  console.log('Firebase не инициализирован - база данных не настроена или отключена');
+}
 
 // === Auth UI ===
 const loginBtn = document.getElementById('login-btn');
@@ -1117,12 +1883,17 @@ const commentForm = document.getElementById('comment-form');
 const commentInput = document.getElementById('comment-input');
 const commentsList = document.getElementById('comments-list');
 
+if (loginBtn && auth) {
 loginBtn.onclick = () => {
   const provider = new firebase.auth.GoogleAuthProvider();
   auth.signInWithPopup(provider);
 };
+}
+if (logoutBtn && auth) {
 logoutBtn.onclick = () => auth.signOut();
+}
 
+if (auth) {
 auth.onAuthStateChanged(user => {
   // Проверяем кастомную сессию
   const customSession = JSON.parse(localStorage.getItem('customUserSession') || 'null');
@@ -1167,6 +1938,7 @@ auth.onAuthStateChanged(user => {
     }
   }
 });
+}
 
 // === Comments ===
 async function renderComment(doc) {
@@ -1228,6 +2000,11 @@ async function renderComment(doc) {
 }
 
 async function loadComments() {
+  if (!db) {
+    commentsList.innerHTML = '<div style="text-align:center;color:#666;padding:1rem;">Комментарии недоступны - база данных не настроена</div>';
+    return;
+  }
+  
   // Анимируем исчезновение старых комментариев
   const oldComments = Array.from(commentsList.children);
   oldComments.forEach(div => {
@@ -1236,7 +2013,7 @@ async function loadComments() {
   });
   setTimeout(async () => {
     commentsList.innerHTML = '';
-    const snapshot = await db.collection('comments').orderBy('timestamp', 'desc').limit(5).get();
+    const snapshot = await db.collection(APP_CONFIG.collections.comments).orderBy('timestamp', 'desc').limit(5).get();
     
     // Рендерим комментарии последовательно для правильной загрузки аватарок
     for (const doc of snapshot.docs) {
@@ -1245,7 +2022,7 @@ async function loadComments() {
     
     // Показываем форму, если пользователь авторизован (Google или кастомный)
     const customSession = JSON.parse(localStorage.getItem('customUserSession') || 'null');
-    if (auth.currentUser || customSession) {
+    if (auth && (auth.currentUser || customSession)) {
       commentForm.style.display = '';
     } else {
       commentForm.style.display = 'none';
@@ -1255,7 +2032,12 @@ async function loadComments() {
 
 commentForm.onsubmit = function(e) {
   e.preventDefault();
-  const user = auth.currentUser;
+  if (!db) {
+    alert('Комментарии недоступны - база данных не настроена');
+    return;
+  }
+  
+  const user = auth ? auth.currentUser : null;
   const customSession = JSON.parse(localStorage.getItem('customUserSession') || 'null');
   
   if (!user && !customSession) return;
@@ -1275,7 +2057,7 @@ commentForm.onsubmit = function(e) {
     userUid = `custom_${customSession.username}`;
   }
   
-  db.collection('comments').add({
+  db.collection(APP_CONFIG.collections.comments).add({
     user: userName,
     uid: userUid,
     text,
@@ -1394,7 +2176,7 @@ registerForm.onsubmit = async (e) => {
   
   try {
     // Проверяем, существует ли пользователь
-    const userDoc = await db.collection('customUsers').doc(username).get();
+    const userDoc = await db.collection(APP_CONFIG.collections.users).doc(username).get();
     
     if (userDoc.exists) {
       showAuthMessage('Пользователь с таким логином уже существует', 'error');
@@ -1403,7 +2185,7 @@ registerForm.onsubmit = async (e) => {
     
     // Создаём нового пользователя
     const hashedPassword = hashPassword(password);
-    await db.collection('customUsers').doc(username).set({
+    await db.collection(APP_CONFIG.collections.users).doc(username).set({
       username: username,
       password: hashedPassword,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -1442,7 +2224,7 @@ loginForm.onsubmit = async (e) => {
   
   try {
     // Ищем пользователя в базе данных
-    const userDoc = await db.collection('customUsers').doc(username).get();
+    const userDoc = await db.collection(APP_CONFIG.collections.users).doc(username).get();
     
     if (!userDoc.exists) {
       showAuthMessage('Пользователь не найден', 'error');
@@ -2278,7 +3060,7 @@ chatSidebar?.addEventListener('click', function(e) {
 // Загрузка сообщений из Firebase
 async function loadChatMessages() {
   try {
-    const messagesSnapshot = await db.collection('messages')
+    const messagesSnapshot = await db.collection(APP_CONFIG.collections.messages)
       .orderBy('timestamp', 'asc')
       .limit(100)
       .get();
@@ -2399,7 +3181,7 @@ if (chatForm) {
         return;
       }
       
-      await db.collection('messages').add(messageData);
+      await db.collection(APP_CONFIG.collections.messages).add(messageData);
       
       // Очищаем поле ввода
       chatInput.value = '';
@@ -2419,7 +3201,7 @@ if (chatForm) {
 // Слушатель новых сообщений в реальном времени
 function setupChatListener() {
   // Слушатель для всех сообщений
-  db.collection('messages')
+  db.collection(APP_CONFIG.collections.messages)
     .orderBy('timestamp', 'desc')
     .limit(10)
     .onSnapshot(snapshot => {
@@ -2582,7 +3364,7 @@ async function getUserNameByUid(uid) {
     }
     
     // Если не найдено в комментариях, проверяем сообщения
-    const messagesSnapshot = await db.collection('messages')
+    const messagesSnapshot = await db.collection(APP_CONFIG.collections.messages)
       .where('senderId', '==', uid)
       .limit(5)
       .get();
@@ -2629,9 +3411,9 @@ async function loadChatUsers() {
     // Загружаем данные параллельно для ускорения
     console.log('Загружаем данные параллельно...');
     const [commentsSnapshot, messagesSnapshot, avatarsSnapshot] = await Promise.all([
-      db.collection('comments').orderBy('timestamp', 'desc').limit(100).get(),
-      db.collection('messages').orderBy('timestamp', 'desc').limit(200).get(),
-      db.collection('avatarka').get()
+      db.collection(APP_CONFIG.collections.comments).orderBy('timestamp', 'desc').limit(100).get(),
+      db.collection(APP_CONFIG.collections.messages).orderBy('timestamp', 'desc').limit(200).get(),
+      db.collection(APP_CONFIG.collections.avatars).get()
     ]);
     
     console.log(`Найдено: комментариев ${commentsSnapshot.size}, сообщений ${messagesSnapshot.size}, аватарок ${avatarsSnapshot.size}`);
@@ -2836,7 +3618,7 @@ async function loadPrivateMessages(targetUserId) {
     }
     
     // Получаем все сообщения и фильтруем на клиенте
-    const messagesSnapshot = await db.collection('messages')
+    const messagesSnapshot = await db.collection(APP_CONFIG.collections.messages)
       .orderBy('timestamp', 'asc')
       .limit(200)
       .get();
@@ -2880,7 +3662,7 @@ async function loadMyChats() {
     chatsContainer.innerHTML = '';
     
     // Получаем все сообщения и группируем по участникам
-    const messagesSnapshot = await db.collection('messages')
+    const messagesSnapshot = await db.collection(APP_CONFIG.collections.messages)
       .orderBy('timestamp', 'desc')
       .limit(500)
       .get();
@@ -3478,6 +4260,11 @@ function handleRandomAvatar() {
 }
 
 async function handleSaveAvatar() {
+  if (!db) {
+    showNotification('Сохранение недоступно - база данных не настроена', 'warning', 5000);
+    return;
+  }
+  
   if (!currentUserUid) {
     showNotification('Пожалуйста, войдите в систему для сохранения аватарки', 'warning', 5000);
     return;
@@ -3488,7 +4275,7 @@ async function handleSaveAvatar() {
     showNotification('Сохранение аватарки...', 'info', 0);
     
     // Сохраняем аватарку в базу данных
-    await db.collection('avatarka').doc(currentUserUid).set({
+    await db.collection(APP_CONFIG.collections.avatars).doc(currentUserUid).set({
       code: currentAvatarCode,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
@@ -3573,8 +4360,17 @@ async function loadNews() {
     try {
         // Проверяем, инициализирован ли Firebase
         if (!db) {
-            console.error('Firebase не инициализирован');
-            throw new Error('Firebase не инициализирован');
+            console.log('Firebase не инициализирован - показываем сообщение о недоступности');
+            newsContainer.innerHTML = `
+                <div class="news-empty">
+                    <h3>Новости недоступны</h3>
+                    <p>База данных не настроена</p>
+                    <button onclick="resetDatabaseConfig()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: #2563eb; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                        Настроить базу данных
+                    </button>
+                </div>
+            `;
+            return;
         }
 
         // Показываем индикатор загрузки
@@ -3590,14 +4386,14 @@ async function loadNews() {
         // Загружаем новости с сортировкой по полю 'created' в убывающем порядке
         let newsSnapshot;
         try {
-            newsSnapshot = await db.collection('news')
+            newsSnapshot = await db.collection(APP_CONFIG.collections.news)
                 .orderBy('created', 'desc')
                 .get();
             console.log('Загружено с сортировкой по created:', newsSnapshot.size, 'документов');
         } catch (sortError) {
             console.log('Ошибка при сортировке по created, пробуем без сортировки:', sortError);
             // Если есть ошибка с сортировкой, загружаем без неё
-            newsSnapshot = await db.collection('news').get();
+            newsSnapshot = await db.collection(APP_CONFIG.collections.news).get();
         }
 
         console.log('Результат запроса:', newsSnapshot);
@@ -4148,7 +4944,7 @@ async function testFirebaseConnection() {
         console.log('✅ Firebase инициализирован');
         
         // Проверяем подключение к коллекции news
-        const testSnapshot = await db.collection('news').limit(1).get();
+        const testSnapshot = await db.collection(APP_CONFIG.collections.news).limit(1).get();
         console.log('✅ Подключение к коллекции news успешно');
         console.log('📊 Количество документов в коллекции:', testSnapshot.size);
         
